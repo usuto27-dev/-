@@ -214,6 +214,15 @@
     <!-- Workouts -->
     <section class="tab-panel" id="tab-workouts">
       <div class="panel">
+        <h2>メモを貼り付けてまとめて反映</h2>
+        <p class="field-hint" style="margin-bottom:8px;">「懸垂16.12.10.7」「ヒップアブダクター67.5×16.16.16.」のような普段のメモをそのまま貼り付けると、種目・重量・回数を読み取って下の入力欄に反映します(自重種目は重量を書かなくてOK)。</p>
+        <textarea id="workout-paste-text" rows="4" placeholder="例:&#10;懸垂16.12.10.7&#10;スミスインクラインベンチ&#10;67×7.5&#10;62×8.6.6"></textarea>
+        <div class="btn-row" style="margin-top:8px;">
+          <button type="button" id="btn-parse-workout-text" class="btn-secondary">読み取って入力欄に反映</button>
+        </div>
+        <p class="field-hint" id="workout-parse-status"></p>
+      </div>
+      <div class="panel">
         <h2>筋トレを記録</h2>
         <p class="field-hint" style="margin-bottom:10px;">1日分の種目をまとめて追加できます。「前回の種目を読み込む」を使うと、前回と同じ種目がすぐに入力できます。</p>
         <div class="inline-form" style="margin-bottom:14px;">

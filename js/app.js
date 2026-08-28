@@ -316,6 +316,24 @@ function initWorkoutRows(count = 3) {
 
 document.getElementById('btn-add-exercise-row').addEventListener('click', () => addExerciseRow());
 
+document.getElementById('btn-parse-workout-text').addEventListener('click', () => {
+  const text = document.getElementById('workout-paste-text').value;
+  const statusEl = document.getElementById('workout-parse-status');
+  if (!text.trim()) {
+    statusEl.textContent = 'テキストを入力してください。';
+    return;
+  }
+  const parsedRows = parseWorkoutText(text);
+  if (!parsedRows.length) {
+    statusEl.textContent = '種目を読み取れませんでした。「種目名 重量×回数.回数.回数」の形式で入力してください。';
+    return;
+  }
+  document.getElementById('workout-rows').innerHTML = '';
+  parsedRows.forEach(r => addExerciseRow(r));
+  const names = [...new Set(parsedRows.map(r => r.exercise))];
+  statusEl.textContent = `${parsedRows.length}行を読み取りました(${names.join('、')})。内容を確認して「まとめて記録する」を押してください。`;
+});
+
 document.getElementById('btn-load-last-session').addEventListener('click', () => {
   const dates = [...new Set(data.workouts.map(w => w.date))].sort();
   const lastDate = dates[dates.length - 1];
@@ -350,6 +368,8 @@ document.getElementById('btn-save-workout-rows').addEventListener('click', () =>
   saveData(data);
   initWorkoutRows(3);
   document.getElementById('workout-date').value = date;
+  document.getElementById('workout-paste-text').value = '';
+  document.getElementById('workout-parse-status').textContent = '';
   renderWorkoutTable();
   renderWorkoutExerciseSelect();
   renderWorkoutChart();

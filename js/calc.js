@@ -96,3 +96,68 @@ function parseBodyCompositionText(text) {
 
   return result;
 }
+
+// Collapse a sequence of rep counts into {reps, sets} groups, merging
+// consecutive equal values (e.g. [16,16,16] -> one group of 3 sets;
+// [16,12,10,7] -> four separate 1-set groups).
+function groupReps(repsArray) {
+  const groups = [];
+  for (const r of repsArray) {
+    const last = groups[groups.length - 1];
+    if (last && last.reps === r) {
+      last.sets++;
+    } else {
+      groups.push({ reps: r, sets: 1 });
+    }
+  }
+  return groups;
+}
+
+// Parse shorthand workout notes into {exercise, weight, reps, sets} rows.
+// Supports lines like:
+//   懸垂16.12.10.7                (bodyweight, no weight given)
+//   ヒップアブダクター67.5×16.16.16.   (name + weight×reps.reps.reps on one line)
+//   スミスインクラインベンチ            (name on its own line)
+//   67×7.5                        (weight×reps line, uses the last-seen name)
+function parseWorkoutText(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  const rows = [];
+  let currentName = '';
+
+  for (let line of lines) {
+    line = line.replace(/[xX＊*]/g, '×');
+    const m = line.match(/^([^\d]*)([0-9].*)$/);
+
+    if (!m) {
+      // No digits at all: a pure exercise-name line.
+      currentName = line;
+      continue;
+    }
+
+    const namePart = m[1].trim();
+    const dataPart = m[2].trim();
+    if (namePart) currentName = namePart;
+    if (!currentName || !dataPart) continue;
+
+    let weight = 0;
+    let repsStr = dataPart;
+    if (dataPart.includes('×')) {
+      const [wPart, rPart] = dataPart.split('×');
+      weight = parseFloat(wPart) || 0;
+      repsStr = rPart;
+    }
+
+    const reps = repsStr.split(/[.,、]/)
+      .map(s => s.trim())
+      .filter(Boolean)
+      .map(Number)
+      .filter(n => Number.isFinite(n) && n > 0);
+    if (!reps.length) continue;
+
+    groupReps(reps).forEach(g => {
+      rows.push({ exercise: currentName, weight, reps: g.reps, sets: g.sets });
+    });
+  }
+
+  return rows;
+}
