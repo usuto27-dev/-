@@ -93,7 +93,7 @@ document.getElementById('file-import').addEventListener('change', (e) => {
         settings: { ...DEFAULT_DATA.settings, ...(imported.settings || {}) },
         bodyLogs: imported.bodyLogs || [],
         meals: imported.meals || [],
-        workouts: imported.workouts || [],
+        workouts: migrateWorkouts(imported.workouts || []),
       };
       saveData(data);
       fillSettingsForm();
@@ -341,30 +341,40 @@ document.getElementById('btn-load-last-session').addEventListener('click', () =>
     alert('過去の記録がありません');
     return;
   }
-  const byExercise = new Map();
-  data.workouts.filter(w => w.date === lastDate).forEach(w => byExercise.set(w.exercise, w));
-  const rows = [...byExercise.values()];
   document.getElementById('workout-rows').innerHTML = '';
-  rows.forEach(w => addExerciseRow(w));
+  data.workouts.filter(w => w.date === lastDate).forEach(w => {
+    w.sets.forEach(s => addExerciseRow({ exercise: w.exercise, weight: s.weight, reps: s.reps, sets: s.count }));
+  });
 });
 
 document.getElementById('btn-save-workout-rows').addEventListener('click', () => {
   const date = document.getElementById('workout-date').value || todayStr();
   const rows = [...document.querySelectorAll('#workout-rows .exercise-row')];
-  let savedCount = 0;
+  const grouped = new Map(); // exercise -> sets[]
   rows.forEach(row => {
     const exercise = row.querySelector('.ex-name').value.trim();
     if (!exercise) return;
     const weight = parseFloat(row.querySelector('.ex-weight').value) || 0;
     const reps = parseInt(row.querySelector('.ex-reps').value) || 0;
-    const sets = parseInt(row.querySelector('.ex-sets').value) || 0;
-    data.workouts.push({ id: uid(), date, exercise, weight, reps, sets });
-    savedCount++;
+    const count = parseInt(row.querySelector('.ex-sets').value) || 0;
+    if (!reps || !count) return;
+    if (!grouped.has(exercise)) grouped.set(exercise, []);
+    grouped.get(exercise).push({ weight, reps, count });
   });
-  if (savedCount === 0) {
-    alert('種目名が入力された行がありません');
+  if (grouped.size === 0) {
+    alert('種目名・回数・セット数が入力された行がありません');
     return;
   }
+  // Same exercise already logged today -> append sets to that row instead
+  // of creating a duplicate.
+  grouped.forEach((sets, exercise) => {
+    const existing = data.workouts.find(w => w.date === date && w.exercise === exercise);
+    if (existing) {
+      existing.sets.push(...sets);
+    } else {
+      data.workouts.push({ id: uid(), date, exercise, sets });
+    }
+  });
   saveData(data);
   initWorkoutRows(3);
   document.getElementById('workout-date').value = date;
@@ -374,25 +384,32 @@ document.getElementById('btn-save-workout-rows').addEventListener('click', () =>
   renderWorkoutExerciseSelect();
   renderWorkoutChart();
   renderExerciseSuggestions();
-  alert(`${savedCount}種目を記録しました`);
+  alert(`${grouped.size}種目を記録しました`);
 });
 
 document.getElementById('workout-filter-date').addEventListener('change', renderWorkoutTable);
+
+function workoutVolume(w) {
+  return w.sets.reduce((sum, s) => sum + s.weight * s.reps * s.count, 0);
+}
 
 function renderWorkoutTable() {
   const filterDate = document.getElementById('workout-filter-date').value || todayStr();
   const dayWorkouts = data.workouts.filter(w => w.date === filterDate);
   const tbody = document.getElementById('workout-log-table');
-  tbody.innerHTML = dayWorkouts.map(w => `
+  tbody.innerHTML = dayWorkouts.map(w => {
+    const setsText = w.sets
+      .map(s => `${s.weight}kg×${s.reps}回${s.count > 1 ? `×${s.count}セット` : ''}`)
+      .join(' / ');
+    return `
     <tr>
       <td>${w.exercise}</td>
-      <td class="num">${w.weight}kg</td>
-      <td class="num">${w.reps}</td>
-      <td class="num">${w.sets}</td>
-      <td class="num">${(w.weight * w.reps * w.sets).toFixed(1)}kg</td>
+      <td>${setsText}</td>
+      <td class="num">${workoutVolume(w).toFixed(1)}kg</td>
       <td><button class="del-btn" data-id="${w.id}" data-kind="workout">削除</button></td>
     </tr>
-  `).join('') || '<tr><td colspan="6">この日の記録はありません</td></tr>';
+  `;
+  }).join('') || '<tr><td colspan="4">この日の記録はありません</td></tr>';
 }
 
 function renderExerciseSuggestions() {
@@ -421,7 +438,7 @@ function renderWorkoutChart() {
     .sort((a, b) => a.date.localeCompare(b.date));
 
   const labels = logs.map(w => w.date);
-  const volumes = logs.map(w => w.weight * w.reps * w.sets);
+  const volumes = logs.map(w => workoutVolume(w));
 
   if (chartWorkout) chartWorkout.destroy();
   chartWorkout = new Chart(ctx, {

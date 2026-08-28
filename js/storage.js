@@ -11,10 +11,40 @@ const DEFAULT_DATA = {
     goalBodyFat: 8,
     goalDate: '2026-12-31',
   },
-  bodyLogs: [],   // { id, date, weight, bodyFat }
+  bodyLogs: [],   // { id, date, weight, bodyFat, muscleMass }
   meals: [],      // { id, date, type, name, cal, protein, carb, fat }
-  workouts: [],   // { id, date, exercise, weight, reps, sets }
+  workouts: [],   // { id, date, exercise, sets: [{ weight, reps, count }] }
 };
+
+// One entry per (date, exercise), so the same exercise done at several
+// weights in one session shows as a single row instead of several.
+// Also upgrades any older flat-shaped entries ({weight,reps,sets} directly
+// on the record, from before this grouping existed) into the new shape.
+function migrateWorkouts(workouts) {
+  const result = [];
+  const byKey = new Map();
+  for (const w of workouts) {
+    if (Array.isArray(w.sets)) {
+      const key = w.date + '||' + w.exercise;
+      if (byKey.has(key)) {
+        byKey.get(key).sets.push(...w.sets);
+      } else {
+        const entry = { id: w.id || uid(), date: w.date, exercise: w.exercise, sets: [...w.sets] };
+        byKey.set(key, entry);
+        result.push(entry);
+      }
+      continue;
+    }
+    const key = w.date + '||' + w.exercise;
+    if (!byKey.has(key)) {
+      const entry = { id: w.id || uid(), date: w.date, exercise: w.exercise, sets: [] };
+      byKey.set(key, entry);
+      result.push(entry);
+    }
+    byKey.get(key).sets.push({ weight: w.weight || 0, reps: w.reps || 0, count: w.sets || 1 });
+  }
+  return result;
+}
 
 function loadData() {
   try {
@@ -25,7 +55,7 @@ function loadData() {
       settings: { ...DEFAULT_DATA.settings, ...(parsed.settings || {}) },
       bodyLogs: parsed.bodyLogs || [],
       meals: parsed.meals || [],
-      workouts: parsed.workouts || [],
+      workouts: migrateWorkouts(parsed.workouts || []),
     };
   } catch (e) {
     console.error('Failed to load data', e);
