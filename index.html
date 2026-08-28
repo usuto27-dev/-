@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>体脂肪8%チャレンジ - 食事・筋トレ管理</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="app">
+  <header class="app-header">
+    <h1>💪 体脂肪8%チャレンジ</h1>
+    <nav class="tabs" id="tabs">
+      <button class="tab-btn active" data-tab="dashboard">ダッシュボード</button>
+      <button class="tab-btn" data-tab="body">体組成</button>
+      <button class="tab-btn" data-tab="meals">食事</button>
+      <button class="tab-btn" data-tab="workouts">筋トレ</button>
+      <button class="tab-btn" data-tab="settings">設定</button>
+    </nav>
+  </header>
+
+  <main class="content">
+
+    <!-- Dashboard -->
+    <section class="tab-panel active" id="tab-dashboard">
+      <div class="card-grid">
+        <div class="card highlight">
+          <div class="card-label">目標まで</div>
+          <div class="card-value" id="dash-days-left">-</div>
+          <div class="card-sub" id="dash-goal-date">目標日: -</div>
+        </div>
+        <div class="card">
+          <div class="card-label">現在の体脂肪率</div>
+          <div class="card-value" id="dash-current-bf">-</div>
+          <div class="card-sub" id="dash-bf-diff">目標まで -</div>
+        </div>
+        <div class="card">
+          <div class="card-label">現在の体重</div>
+          <div class="card-value" id="dash-current-weight">-</div>
+          <div class="card-sub" id="dash-weight-diff">前回比 -</div>
+        </div>
+        <div class="card">
+          <div class="card-label">除脂肪体重(LBM)</div>
+          <div class="card-value" id="dash-lbm">-</div>
+          <div class="card-sub">筋肉量の目安</div>
+        </div>
+      </div>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-label">目標摂取カロリー</div>
+          <div class="card-value" id="dash-cal-target">-</div>
+          <div class="card-sub" id="dash-cal-detail">TDEE: -</div>
+        </div>
+        <div class="card">
+          <div class="card-label">目標たんぱく質</div>
+          <div class="card-value" id="dash-protein-target">-</div>
+          <div class="card-sub">除脂肪体重 × 2.2g</div>
+        </div>
+        <div class="card">
+          <div class="card-label">本日の摂取カロリー</div>
+          <div class="card-value" id="dash-today-cal">-</div>
+          <div class="card-sub" id="dash-today-cal-diff">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">本日のたんぱく質</div>
+          <div class="card-value" id="dash-today-protein">-</div>
+          <div class="card-sub" id="dash-today-protein-diff">-</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>体脂肪率の進捗</h2>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" id="dash-progress-bar"></div>
+        </div>
+        <div class="progress-labels">
+          <span id="dash-progress-start">開始 -</span>
+          <span id="dash-progress-goal">目標 8%</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>体重・体脂肪率の推移</h2>
+        <canvas id="chart-body" height="90"></canvas>
+      </div>
+
+      <div class="panel">
+        <h2>直近7日間のカロリー収支</h2>
+        <canvas id="chart-calories" height="90"></canvas>
+      </div>
+    </section>
+
+    <!-- Body composition -->
+    <section class="tab-panel" id="tab-body">
+      <div class="panel">
+        <h2>体組成を記録</h2>
+        <form id="form-body" class="inline-form">
+          <label>日付<input type="date" id="body-date" required></label>
+          <label>体重(kg)<input type="number" step="0.1" id="body-weight" required></label>
+          <label>体脂肪率(%)<input type="number" step="0.1" id="body-fat" required></label>
+          <button type="submit" class="btn-primary">記録する</button>
+        </form>
+      </div>
+      <div class="panel">
+        <h2>記録履歴</h2>
+        <table class="data-table">
+          <thead><tr><th>日付</th><th>体重(kg)</th><th>体脂肪率(%)</th><th>除脂肪体重(kg)</th><th></th></tr></thead>
+          <tbody id="body-log-table"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Meals -->
+    <section class="tab-panel" id="tab-meals">
+      <div class="panel">
+        <h2>食事を記録</h2>
+        <form id="form-meal" class="inline-form">
+          <label>日付<input type="date" id="meal-date" required></label>
+          <label>食事区分
+            <select id="meal-type">
+              <option value="朝食">朝食</option>
+              <option value="昼食">昼食</option>
+              <option value="夕食">夕食</option>
+              <option value="間食">間食</option>
+            </select>
+          </label>
+          <label>メニュー名<input type="text" id="meal-name" required placeholder="例: 鶏胸肉と白米"></label>
+          <label>カロリー(kcal)<input type="number" step="1" id="meal-cal" required></label>
+          <label>たんぱく質(g)<input type="number" step="0.1" id="meal-protein" required></label>
+          <label>炭水化物(g)<input type="number" step="0.1" id="meal-carb" value="0"></label>
+          <label>脂質(g)<input type="number" step="0.1" id="meal-fat" value="0"></label>
+          <button type="submit" class="btn-primary">記録する</button>
+        </form>
+      </div>
+      <div class="panel">
+        <h2>日付で表示</h2>
+        <input type="date" id="meal-filter-date">
+        <div class="totals-row" id="meal-day-totals"></div>
+        <table class="data-table">
+          <thead><tr><th>区分</th><th>メニュー</th><th>kcal</th><th>P</th><th>C</th><th>F</th><th></th></tr></thead>
+          <tbody id="meal-log-table"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Workouts -->
+    <section class="tab-panel" id="tab-workouts">
+      <div class="panel">
+        <h2>筋トレを記録</h2>
+        <form id="form-workout" class="inline-form">
+          <label>日付<input type="date" id="workout-date" required></label>
+          <label>種目<input type="text" id="workout-exercise" required placeholder="例: ベンチプレス"></label>
+          <label>重量(kg)<input type="number" step="0.5" id="workout-weight" required></label>
+          <label>回数(reps)<input type="number" step="1" id="workout-reps" required></label>
+          <label>セット数<input type="number" step="1" id="workout-sets" required value="3"></label>
+          <button type="submit" class="btn-primary">記録する</button>
+        </form>
+      </div>
+      <div class="panel">
+        <h2>日付で表示</h2>
+        <input type="date" id="workout-filter-date">
+        <table class="data-table">
+          <thead><tr><th>種目</th><th>重量</th><th>回数</th><th>セット</th><th>総ボリューム</th><th></th></tr></thead>
+          <tbody id="workout-log-table"></tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <h2>種目別ボリューム推移</h2>
+        <select id="workout-exercise-select"></select>
+        <canvas id="chart-workout" height="90"></canvas>
+      </div>
+    </section>
+
+    <!-- Settings -->
+    <section class="tab-panel" id="tab-settings">
+      <div class="panel">
+        <h2>プロフィール設定</h2>
+        <form id="form-settings" class="inline-form">
+          <label>性別
+            <select id="set-gender">
+              <option value="male">男性</option>
+              <option value="female">女性</option>
+            </select>
+          </label>
+          <label>生年月日<input type="date" id="set-birthdate"></label>
+          <label>身長(cm)<input type="number" step="0.1" id="set-height" required></label>
+          <label>活動レベル
+            <select id="set-activity">
+              <option value="1.2">座り仕事中心</option>
+              <option value="1.375">軽い運動 (週1-3)</option>
+              <option value="1.55" selected>中程度の運動 (週3-5)</option>
+              <option value="1.725">活発 (週6-7)</option>
+              <option value="1.9">非常に活発 (肉体労働+運動)</option>
+            </select>
+          </label>
+          <label>カロリー赤字(kcal/日)<input type="number" step="50" id="set-deficit" value="400"></label>
+          <label>目標体脂肪率(%)<input type="number" step="0.1" id="set-goal-bf" value="8"></label>
+          <label>目標日<input type="date" id="set-goal-date" value="2026-12-31"></label>
+          <button type="submit" class="btn-primary">保存する</button>
+        </form>
+      </div>
+      <div class="panel">
+        <h2>データ管理</h2>
+        <div class="btn-row">
+          <button id="btn-export" class="btn-secondary">JSONエクスポート</button>
+          <button id="btn-import" class="btn-secondary">JSONインポート</button>
+          <input type="file" id="file-import" accept="application/json" style="display:none">
+          <button id="btn-reset" class="btn-danger">全データ削除</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+<script src="js/storage.js"></script>
+<script src="js/calc.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

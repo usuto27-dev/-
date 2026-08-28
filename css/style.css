@@ -1,0 +1,228 @@
+:root {
+  --bg: #0f1420;
+  --bg-panel: #161d2e;
+  --bg-card: #1b2438;
+  --border: #2a3550;
+  --text: #e8ecf5;
+  --text-dim: #8f9bb8;
+  --accent: #4fd1a5;
+  --accent-2: #ff9f6b;
+  --danger: #ff6b6b;
+  --radius: 12px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Hiragino Sans", "Yu Gothic", -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app-header {
+  padding: 20px 24px 0;
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 10;
+}
+
+.app-header h1 {
+  margin: 0 0 12px;
+  font-size: 1.4rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  padding: 10px 16px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+
+.tab-btn.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.content {
+  padding: 20px 24px 60px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.card.highlight {
+  background: linear-gradient(135deg, #1b3a30, #16283a);
+  border-color: var(--accent);
+}
+
+.card-label {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+.card-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.card-sub {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 20px;
+}
+
+.panel h2 {
+  margin-top: 0;
+  font-size: 1.05rem;
+}
+
+.inline-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.inline-form label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  gap: 4px;
+}
+
+.inline-form input, .inline-form select {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  min-width: 120px;
+}
+
+.btn-primary, .btn-secondary, .btn-danger {
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.btn-primary { background: var(--accent); color: #08281c; }
+.btn-secondary { background: var(--bg-card); color: var(--text); border: 1px solid var(--border); }
+.btn-danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 14px;
+  font-size: 0.88rem;
+}
+
+.data-table th, .data-table td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table th {
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+.data-table .del-btn {
+  background: transparent;
+  border: none;
+  color: var(--danger);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.progress-bar-wrap {
+  height: 16px;
+  background: var(--bg-card);
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-2), var(--accent));
+  width: 0%;
+  transition: width 0.4s ease;
+}
+
+.progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin-top: 6px;
+}
+
+.totals-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+  font-size: 0.9rem;
+}
+
+.totals-row span b { color: var(--accent); }
+
+#meal-filter-date, #workout-filter-date, #workout-exercise-select {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 10px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+
+@media (max-width: 600px) {
+  .content { padding: 16px; }
+  .inline-form input, .inline-form select { min-width: 100px; }
+}
