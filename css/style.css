@@ -379,6 +379,107 @@ details.glossary dd {
 
 .chart-box { position: relative; height: 220px; }
 
+.beta-tag {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--accent-warm);
+  border: 1px solid var(--accent-warm);
+  border-radius: 999px;
+  padding: 1px 7px;
+  margin-left: 8px;
+  vertical-align: middle;
+  font-family: var(--font-body);
+}
+
+textarea {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--text);
+  padding: 9px 10px;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+input[type="file"] {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  max-width: 100%;
+}
+
+.exercise-row {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 8px;
+}
+
+.exercise-row-top {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.exercise-row-top .ex-name {
+  flex: 1;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--text);
+  padding: 8px 10px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.92rem;
+}
+
+.row-remove-btn {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--danger);
+  font-size: 1rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.exercise-row-numbers {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.exercise-row-numbers label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.66rem;
+  color: var(--text-dim);
+  gap: 3px;
+}
+
+.exercise-row-numbers input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--text);
+  padding: 8px 8px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
 @media (min-width: 641px) {
   .card-grid { grid-template-columns: repeat(4, 1fr); }
   .card.highlight { grid-column: span 1; }

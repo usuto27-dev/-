@@ -115,6 +115,22 @@ document.getElementById('btn-reset').addEventListener('click', () => {
   renderAll();
 });
 
+// ---------- OCR helper (shared by body & meal photo inputs) ----------
+async function runOcrOnFile(file, statusEl) {
+  statusEl.textContent = '画像を解析しています…(初回は時間がかかることがあります)';
+  if (typeof Tesseract === 'undefined') {
+    statusEl.textContent = 'この環境では写真の読み取り機能を利用できませんでした。数値は手動で入力してください。';
+    return null;
+  }
+  try {
+    const { data: { text } } = await Tesseract.recognize(file, 'jpn+eng');
+    return text;
+  } catch (e) {
+    statusEl.textContent = 'この環境では写真の読み取りができませんでした。数値は手動で入力してください。';
+    return null;
+  }
+}
+
 // ---------- Body logs ----------
 function sortedBodyLogs() {
   return [...data.bodyLogs].sort((a, b) => a.date.localeCompare(b.date));
@@ -127,17 +143,37 @@ function latestBodyLog() {
 
 document.getElementById('form-body').addEventListener('submit', (e) => {
   e.preventDefault();
+  const muscleVal = document.getElementById('body-muscle').value;
   data.bodyLogs.push({
     id: uid(),
     date: document.getElementById('body-date').value,
     weight: parseFloat(document.getElementById('body-weight').value),
     bodyFat: parseFloat(document.getElementById('body-fat').value),
+    muscleMass: muscleVal !== '' ? parseFloat(muscleVal) : null,
   });
   saveData(data);
   e.target.reset();
   document.getElementById('body-date').value = todayStr();
+  document.getElementById('body-ocr-status').textContent = '';
   renderBodyTable();
   renderDashboard();
+});
+
+document.getElementById('body-photo-input').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById('body-ocr-status');
+  const text = await runOcrOnFile(file, statusEl);
+  e.target.value = '';
+  if (!text) return;
+  const parsed = parseBodyCompositionText(text);
+  const found = [];
+  if (parsed.weight != null) { document.getElementById('body-weight').value = parsed.weight; found.push(`体重${parsed.weight}kg`); }
+  if (parsed.bodyFat != null) { document.getElementById('body-fat').value = parsed.bodyFat; found.push(`体脂肪率${parsed.bodyFat}%`); }
+  if (parsed.muscleMass != null) { document.getElementById('body-muscle').value = parsed.muscleMass; found.push(`筋肉量${parsed.muscleMass}kg`); }
+  statusEl.textContent = found.length
+    ? `読み取りました: ${found.join(' / ')}。内容を確認して「記録する」を押してください。`
+    : '数値を読み取れませんでした。手動で入力してください。';
 });
 
 function renderBodyTable() {
@@ -148,10 +184,11 @@ function renderBodyTable() {
       <td>${l.date}</td>
       <td class="num">${l.weight.toFixed(1)}</td>
       <td class="num">${l.bodyFat.toFixed(1)}</td>
+      <td class="num">${l.muscleMass != null ? l.muscleMass.toFixed(1) : '-'}</td>
       <td class="num">${calcLBM(l.weight, l.bodyFat).toFixed(1)}</td>
       <td><button class="del-btn" data-id="${l.id}" data-kind="body">削除</button></td>
     </tr>
-  `).join('') || '<tr><td colspan="5">記録がありません</td></tr>';
+  `).join('') || '<tr><td colspan="6">記録がありません</td></tr>';
 }
 
 // ---------- Meals ----------
@@ -172,8 +209,42 @@ document.getElementById('form-meal').addEventListener('submit', (e) => {
   document.getElementById('meal-date').value = todayStr();
   document.getElementById('meal-carb').value = 0;
   document.getElementById('meal-fat').value = 0;
+  document.getElementById('meal-paste-text').value = '';
+  document.getElementById('meal-parse-status').textContent = '';
+  document.getElementById('meal-ocr-status').textContent = '';
   renderMealTable();
   renderDashboard();
+});
+
+function applyParsedNutrition(parsed, statusEl) {
+  const found = [];
+  if (parsed.cal != null) { document.getElementById('meal-cal').value = parsed.cal; found.push(`カロリー${parsed.cal}kcal`); }
+  if (parsed.protein != null) { document.getElementById('meal-protein').value = parsed.protein; found.push(`たんぱく質${parsed.protein}g`); }
+  if (parsed.carb != null) { document.getElementById('meal-carb').value = parsed.carb; found.push(`炭水化物${parsed.carb}g`); }
+  if (parsed.fat != null) { document.getElementById('meal-fat').value = parsed.fat; found.push(`脂質${parsed.fat}g`); }
+  statusEl.textContent = found.length
+    ? `読み取りました: ${found.join(' / ')}。内容を確認して「記録する」を押してください。`
+    : '数値を読み取れませんでした。手動で入力してください。';
+}
+
+document.getElementById('btn-parse-meal-text').addEventListener('click', () => {
+  const text = document.getElementById('meal-paste-text').value;
+  const statusEl = document.getElementById('meal-parse-status');
+  if (!text.trim()) {
+    statusEl.textContent = 'テキストを入力してください。';
+    return;
+  }
+  applyParsedNutrition(parseNutritionText(text), statusEl);
+});
+
+document.getElementById('meal-photo-input').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById('meal-ocr-status');
+  const text = await runOcrOnFile(file, statusEl);
+  e.target.value = '';
+  if (!text) return;
+  applyParsedNutrition(parseNutritionText(text), statusEl);
 });
 
 document.getElementById('meal-filter-date').addEventListener('change', renderMealTable);
@@ -214,24 +285,76 @@ function mealTotalsForDate(dateStr) {
   }, { cal: 0, protein: 0 });
 }
 
-// ---------- Workouts ----------
-document.getElementById('form-workout').addEventListener('submit', (e) => {
-  e.preventDefault();
-  data.workouts.push({
-    id: uid(),
-    date: document.getElementById('workout-date').value,
-    exercise: document.getElementById('workout-exercise').value,
-    weight: parseFloat(document.getElementById('workout-weight').value) || 0,
-    reps: parseInt(document.getElementById('workout-reps').value) || 0,
-    sets: parseInt(document.getElementById('workout-sets').value) || 0,
+// ---------- Workouts (multi-exercise quick entry) ----------
+function createExerciseRow(prefill = {}) {
+  const row = document.createElement('div');
+  row.className = 'exercise-row';
+  row.innerHTML = `
+    <div class="exercise-row-top">
+      <input type="text" class="ex-name" list="exercise-suggestions" placeholder="種目名(例: ベンチプレス)" value="${prefill.exercise || ''}">
+      <button type="button" class="row-remove-btn" aria-label="この行を削除">×</button>
+    </div>
+    <div class="exercise-row-numbers">
+      <label>重量(kg)<input type="number" class="ex-weight" step="0.5" inputmode="decimal" value="${prefill.weight != null ? prefill.weight : ''}"></label>
+      <label>回数<input type="number" class="ex-reps" step="1" inputmode="numeric" value="${prefill.reps != null ? prefill.reps : ''}"></label>
+      <label>セット<input type="number" class="ex-sets" step="1" inputmode="numeric" value="${prefill.sets != null ? prefill.sets : 3}"></label>
+    </div>
+  `;
+  row.querySelector('.row-remove-btn').addEventListener('click', () => row.remove());
+  return row;
+}
+
+function addExerciseRow(prefill) {
+  document.getElementById('workout-rows').appendChild(createExerciseRow(prefill));
+}
+
+function initWorkoutRows(count = 3) {
+  const container = document.getElementById('workout-rows');
+  container.innerHTML = '';
+  for (let i = 0; i < count; i++) addExerciseRow();
+}
+
+document.getElementById('btn-add-exercise-row').addEventListener('click', () => addExerciseRow());
+
+document.getElementById('btn-load-last-session').addEventListener('click', () => {
+  const dates = [...new Set(data.workouts.map(w => w.date))].sort();
+  const lastDate = dates[dates.length - 1];
+  if (!lastDate) {
+    alert('過去の記録がありません');
+    return;
+  }
+  const byExercise = new Map();
+  data.workouts.filter(w => w.date === lastDate).forEach(w => byExercise.set(w.exercise, w));
+  const rows = [...byExercise.values()];
+  document.getElementById('workout-rows').innerHTML = '';
+  rows.forEach(w => addExerciseRow(w));
+});
+
+document.getElementById('btn-save-workout-rows').addEventListener('click', () => {
+  const date = document.getElementById('workout-date').value || todayStr();
+  const rows = [...document.querySelectorAll('#workout-rows .exercise-row')];
+  let savedCount = 0;
+  rows.forEach(row => {
+    const exercise = row.querySelector('.ex-name').value.trim();
+    if (!exercise) return;
+    const weight = parseFloat(row.querySelector('.ex-weight').value) || 0;
+    const reps = parseInt(row.querySelector('.ex-reps').value) || 0;
+    const sets = parseInt(row.querySelector('.ex-sets').value) || 0;
+    data.workouts.push({ id: uid(), date, exercise, weight, reps, sets });
+    savedCount++;
   });
+  if (savedCount === 0) {
+    alert('種目名が入力された行がありません');
+    return;
+  }
   saveData(data);
-  e.target.reset();
-  document.getElementById('workout-date').value = todayStr();
-  document.getElementById('workout-sets').value = 3;
+  initWorkoutRows(3);
+  document.getElementById('workout-date').value = date;
   renderWorkoutTable();
   renderWorkoutExerciseSelect();
   renderWorkoutChart();
+  renderExerciseSuggestions();
+  alert(`${savedCount}種目を記録しました`);
 });
 
 document.getElementById('workout-filter-date').addEventListener('change', renderWorkoutTable);
@@ -250,6 +373,12 @@ function renderWorkoutTable() {
       <td><button class="del-btn" data-id="${w.id}" data-kind="workout">削除</button></td>
     </tr>
   `).join('') || '<tr><td colspan="6">この日の記録はありません</td></tr>';
+}
+
+function renderExerciseSuggestions() {
+  const datalist = document.getElementById('exercise-suggestions');
+  const names = [...new Set(data.workouts.map(w => w.exercise))].sort();
+  datalist.innerHTML = names.map(n => `<option value="${n}"></option>`).join('');
 }
 
 function renderWorkoutExerciseSelect() {
@@ -284,6 +413,8 @@ function renderWorkoutChart() {
         data: volumes,
         borderColor: cssVar('--accent'),
         backgroundColor: cssVar('--accent') + '26',
+        pointRadius: 3,
+        pointHoverRadius: 5,
         tension: 0.3,
         fill: true,
       }],
@@ -337,6 +468,8 @@ function renderBodyChart() {
           borderColor: cssVar('--accent'),
           backgroundColor: cssVar('--accent') + '26',
           yAxisID: 'y',
+          pointRadius: 3,
+          pointHoverRadius: 5,
           tension: 0.3,
         },
         {
@@ -345,7 +478,10 @@ function renderBodyChart() {
           borderColor: cssVar('--accent-warm'),
           backgroundColor: cssVar('--accent-warm') + '26',
           yAxisID: 'y1',
+          pointRadius: 3,
+          pointHoverRadius: 5,
           tension: 0.3,
+          fill: true,
         },
       ],
     },
@@ -396,6 +532,26 @@ function renderCalorieChart(calorieTarget) {
 }
 
 // ---------- Dashboard ----------
+function renderProgressSummary() {
+  const logs = sortedBodyLogs();
+  const el = document.getElementById('dash-progress-summary');
+  if (logs.length === 0) {
+    el.textContent = '体組成を記録すると、ここに開始からの変化が表示されます。';
+    return;
+  }
+  if (logs.length === 1) {
+    el.textContent = `記録は${logs[0].date}に始まったばかりです。継続して記録していきましょう。`;
+    return;
+  }
+  const first = logs[0];
+  const latest = logs[logs.length - 1];
+  const days = daysBetween(first.date, latest.date);
+  const weightDiff = latest.weight - first.weight;
+  const bfDiff = latest.bodyFat - first.bodyFat;
+  const sign = (n) => (n > 0 ? '+' : '');
+  el.innerHTML = `開始日(${first.date}、${days}日前)は体重 <b class="num">${first.weight.toFixed(1)}</b>kg・体脂肪率 <b class="num">${first.bodyFat.toFixed(1)}</b>% でした。そこから体重は <b class="num">${sign(weightDiff)}${weightDiff.toFixed(1)}</b>kg、体脂肪率は <b class="num">${sign(bfDiff)}${bfDiff.toFixed(1)}</b>pt 変化しています。`;
+}
+
 function renderDashboard() {
   const s = data.settings;
   const latest = latestBodyLog();
@@ -465,6 +621,7 @@ function renderDashboard() {
   document.getElementById('dash-progress-start').textContent = startBf != null ? `開始 ${startBf.toFixed(1)}%` : '開始 -';
   document.getElementById('dash-progress-goal').textContent = `目標 ${goalBf}%`;
 
+  renderProgressSummary();
   renderBodyChart();
   renderCalorieChart(calorieTarget);
 }
@@ -477,6 +634,7 @@ function renderAll() {
   renderWorkoutTable();
   renderWorkoutExerciseSelect();
   renderWorkoutChart();
+  renderExerciseSuggestions();
   renderDashboard();
 }
 
@@ -490,6 +648,7 @@ function setDefaultDates() {
 }
 
 setDefaultDates();
+initWorkoutRows(3);
 renderAll();
 
 if (window.matchMedia) {

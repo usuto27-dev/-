@@ -12,6 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js"></script>
 </head>
 <body>
 <div class="app">
@@ -117,6 +118,7 @@
           <span id="dash-progress-start">開始 -</span>
           <span id="dash-progress-goal">目標 8%</span>
         </div>
+        <p class="field-hint" id="dash-progress-summary" style="margin-top:10px;"></p>
       </div>
 
       <div class="panel">
@@ -133,11 +135,18 @@
     <!-- Body composition -->
     <section class="tab-panel" id="tab-body">
       <div class="panel">
+        <h2>測定結果の写真から読み取る<span class="beta-tag">実験的機能</span></h2>
+        <p class="field-hint" style="margin-bottom:8px;">ジムの体組成計の画面や印刷結果を撮影すると、体重・体脂肪率・筋肉量の読み取りを試みます。精度は完璧ではないため、読み取り後は必ず内容を確認してください。初回は読み込みに時間がかかることがあります。</p>
+        <input type="file" accept="image/*" capture="environment" id="body-photo-input">
+        <p class="field-hint" id="body-ocr-status"></p>
+      </div>
+      <div class="panel">
         <h2>体組成を記録</h2>
         <form id="form-body" class="inline-form">
           <label>日付<input type="date" id="body-date" required></label>
           <label>体重(kg)<input type="number" step="0.1" inputmode="decimal" id="body-weight" required></label>
           <label>体脂肪率(%)<input type="number" step="0.1" inputmode="decimal" id="body-fat" required></label>
+          <label>筋肉量(kg・任意)<input type="number" step="0.1" inputmode="decimal" id="body-muscle"></label>
           <button type="submit" class="btn-primary">記録する</button>
         </form>
       </div>
@@ -145,7 +154,7 @@
         <h2>記録履歴</h2>
         <div class="table-scroll">
         <table class="data-table">
-          <thead><tr><th>日付</th><th>体重(kg)</th><th>体脂肪率(%)</th><th>LBM(kg)</th><th></th></tr></thead>
+          <thead><tr><th>日付</th><th>体重(kg)</th><th>体脂肪率(%)</th><th>筋肉量(kg)</th><th>LBM(kg)</th><th></th></tr></thead>
           <tbody id="body-log-table"></tbody>
         </table>
         </div>
@@ -154,6 +163,21 @@
 
     <!-- Meals -->
     <section class="tab-panel" id="tab-meals">
+      <div class="panel">
+        <h2>他のAIで計算した結果を貼り付ける</h2>
+        <p class="field-hint" style="margin-bottom:8px;">ChatGPTなど他のAIで食事の写真からカロリー・PFCを計算した場合、その結果をそのまま貼り付けると自動で数値を読み取って下のフォームに入力します。</p>
+        <textarea id="meal-paste-text" rows="3" placeholder="例: カロリー550kcal, たんぱく質35g, 炭水化物60g, 脂質15g"></textarea>
+        <div class="btn-row" style="margin-top:8px;">
+          <button type="button" id="btn-parse-meal-text" class="btn-secondary">読み取ってフォームに反映</button>
+        </div>
+        <p class="field-hint" id="meal-parse-status"></p>
+      </div>
+      <div class="panel">
+        <h2>栄養成分表示の写真から読み取る<span class="beta-tag">実験的機能</span></h2>
+        <p class="field-hint" style="margin-bottom:8px;">お菓子や加工食品パッケージの「栄養成分表示」を撮影すると、数値の読み取りを試みます。お皿に盛った料理そのものの写真からは計算できません。精度は完璧ではないため、読み取り後は必ず内容を確認してください。</p>
+        <input type="file" accept="image/*" capture="environment" id="meal-photo-input">
+        <p class="field-hint" id="meal-ocr-status"></p>
+      </div>
       <div class="panel">
         <h2>食事を記録</h2>
         <form id="form-meal" class="inline-form">
@@ -191,14 +215,17 @@
     <section class="tab-panel" id="tab-workouts">
       <div class="panel">
         <h2>筋トレを記録</h2>
-        <form id="form-workout" class="inline-form">
+        <p class="field-hint" style="margin-bottom:10px;">1日分の種目をまとめて追加できます。「前回の種目を読み込む」を使うと、前回と同じ種目がすぐに入力できます。</p>
+        <div class="inline-form" style="margin-bottom:14px;">
           <label>日付<input type="date" id="workout-date" required></label>
-          <label>種目<input type="text" id="workout-exercise" required placeholder="例: ベンチプレス"></label>
-          <label>重量(kg)<input type="number" step="0.5" inputmode="decimal" id="workout-weight" required></label>
-          <label>回数(reps)<input type="number" step="1" inputmode="numeric" id="workout-reps" required></label>
-          <label>セット数<input type="number" step="1" inputmode="numeric" id="workout-sets" required value="3"></label>
-          <button type="submit" class="btn-primary">記録する</button>
-        </form>
+          <button type="button" id="btn-load-last-session" class="btn-secondary">前回の種目を読み込む</button>
+        </div>
+        <div id="workout-rows"></div>
+        <div class="btn-row" style="margin-top:6px;">
+          <button type="button" id="btn-add-exercise-row" class="btn-secondary">+ 種目を追加</button>
+          <button type="button" id="btn-save-workout-rows" class="btn-primary">まとめて記録する</button>
+        </div>
+        <datalist id="exercise-suggestions"></datalist>
       </div>
       <div class="panel">
         <h2>日付で表示</h2>
