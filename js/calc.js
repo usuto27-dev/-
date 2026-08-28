@@ -47,3 +47,7 @@ function daysBetween(dateFromStr, dateToStr) {
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
+
+function cssVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}

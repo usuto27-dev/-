@@ -2,21 +2,43 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>体脂肪8%チャレンジ - 食事・筋トレ管理</title>
+<title>体脂肪8%チャレンジ</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0e18">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 </head>
 <body>
 <div class="app">
   <header class="app-header">
-    <h1>💪 体脂肪8%チャレンジ</h1>
+    <h1>体脂肪8%チャレンジ</h1>
+    <p class="tagline">食事・筋トレ・体組成を記録して、年末までの変化を追う</p>
     <nav class="tabs" id="tabs">
-      <button class="tab-btn active" data-tab="dashboard">ダッシュボード</button>
-      <button class="tab-btn" data-tab="body">体組成</button>
-      <button class="tab-btn" data-tab="meals">食事</button>
-      <button class="tab-btn" data-tab="workouts">筋トレ</button>
-      <button class="tab-btn" data-tab="settings">設定</button>
+      <button class="tab-btn active" data-tab="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="12" width="4" height="8"></rect><rect x="10" y="7" width="4" height="13"></rect><rect x="16" y="3" width="4" height="17"></rect></svg>
+        <span class="label">ホーム</span>
+      </button>
+      <button class="tab-btn" data-tab="body">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8"></circle><line x1="12" y1="12" x2="15.5" y2="9"></line><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"></circle></svg>
+        <span class="label">体組成</span>
+      </button>
+      <button class="tab-btn" data-tab="meals">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle></svg>
+        <span class="label">食事</span>
+      </button>
+      <button class="tab-btn" data-tab="workouts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="12" x2="20" y2="12"></line><rect x="2" y="9" width="4" height="6" rx="1"></rect><rect x="18" y="9" width="4" height="6" rx="1"></rect></svg>
+        <span class="label">筋トレ</span>
+      </button>
+      <button class="tab-btn" data-tab="settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"></line><circle cx="9" cy="7" r="2" fill="currentColor" stroke="none"></circle><line x1="4" y1="12" x2="20" y2="12"></line><circle cx="16" cy="12" r="2" fill="currentColor" stroke="none"></circle><line x1="4" y1="17" x2="20" y2="17"></line><circle cx="11" cy="17" r="2" fill="currentColor" stroke="none"></circle></svg>
+        <span class="label">設定</span>
+      </button>
     </nav>
   </header>
 
@@ -27,48 +49,64 @@
       <div class="card-grid">
         <div class="card highlight">
           <div class="card-label">目標まで</div>
-          <div class="card-value" id="dash-days-left">-</div>
+          <div class="card-value num" id="dash-days-left">-</div>
           <div class="card-sub" id="dash-goal-date">目標日: -</div>
         </div>
         <div class="card">
           <div class="card-label">現在の体脂肪率</div>
-          <div class="card-value" id="dash-current-bf">-</div>
+          <div class="card-value num" id="dash-current-bf">-</div>
           <div class="card-sub" id="dash-bf-diff">目標まで -</div>
         </div>
         <div class="card">
           <div class="card-label">現在の体重</div>
-          <div class="card-value" id="dash-current-weight">-</div>
+          <div class="card-value num" id="dash-current-weight">-</div>
           <div class="card-sub" id="dash-weight-diff">前回比 -</div>
         </div>
         <div class="card">
-          <div class="card-label">除脂肪体重(LBM)</div>
-          <div class="card-value" id="dash-lbm">-</div>
-          <div class="card-sub">筋肉量の目安</div>
+          <div class="card-label">除脂肪体重<span class="jargon">(LBM)</span></div>
+          <div class="card-value num" id="dash-lbm">-</div>
+          <div class="card-sub">体重から体脂肪の重さを除いた分。筋肉や骨などの重さです</div>
         </div>
       </div>
 
       <div class="card-grid">
         <div class="card">
-          <div class="card-label">目標摂取カロリー</div>
-          <div class="card-value" id="dash-cal-target">-</div>
-          <div class="card-sub" id="dash-cal-detail">TDEE: -</div>
+          <div class="card-label">1日に食べていいカロリー</div>
+          <div class="card-value num" id="dash-cal-target">-</div>
+          <div class="card-sub" id="dash-cal-detail">1日に消費するカロリー: -</div>
         </div>
         <div class="card">
-          <div class="card-label">目標たんぱく質</div>
-          <div class="card-value" id="dash-protein-target">-</div>
-          <div class="card-sub">除脂肪体重 × 2.2g</div>
+          <div class="card-label">1日に摂りたいたんぱく質</div>
+          <div class="card-value num" id="dash-protein-target">-</div>
+          <div class="card-sub">筋肉を落とさず体脂肪を減らすための目安量</div>
         </div>
         <div class="card">
           <div class="card-label">本日の摂取カロリー</div>
-          <div class="card-value" id="dash-today-cal">-</div>
+          <div class="card-value num" id="dash-today-cal">-</div>
           <div class="card-sub" id="dash-today-cal-diff">-</div>
         </div>
         <div class="card">
           <div class="card-label">本日のたんぱく質</div>
-          <div class="card-value" id="dash-today-protein">-</div>
+          <div class="card-value num" id="dash-today-protein">-</div>
           <div class="card-sub" id="dash-today-protein-diff">-</div>
         </div>
       </div>
+
+      <details class="glossary">
+        <summary>このアプリで出てくる言葉の説明</summary>
+        <dl>
+          <dt>基礎代謝(BMR)</dt>
+          <dd>1日中じっと寝ていても、生きているだけで消費するカロリーのこと。</dd>
+          <dt>1日に消費するカロリー(TDEE)</dt>
+          <dd>基礎代謝に、日常生活や運動で使うカロリーを足したもの。「これより少なく食べれば体脂肪が減る」という基準になる数字です。</dd>
+          <dt>除脂肪体重(LBM)</dt>
+          <dd>体重から体脂肪の重さを引いたもの。筋肉・骨・内臓・水分などの重さの合計です。</dd>
+          <dt>PFC</dt>
+          <dd>たんぱく質(Protein)・炭水化物(Carbohydrate)・脂質(Fat)の頭文字。体に必要な3大栄養素のことです。</dd>
+          <dt>カロリー赤字</dt>
+          <dd>消費するカロリーより、食べるカロリーを少なくすること。体脂肪を減らすために必要な状態です。ただし減らしすぎると筋肉も落ちやすくなります。</dd>
+        </dl>
+      </details>
 
       <div class="panel">
         <h2>体脂肪率の進捗</h2>
@@ -83,12 +121,12 @@
 
       <div class="panel">
         <h2>体重・体脂肪率の推移</h2>
-        <canvas id="chart-body" height="90"></canvas>
+        <div class="chart-box"><canvas id="chart-body"></canvas></div>
       </div>
 
       <div class="panel">
         <h2>直近7日間のカロリー収支</h2>
-        <canvas id="chart-calories" height="90"></canvas>
+        <div class="chart-box"><canvas id="chart-calories"></canvas></div>
       </div>
     </section>
 
@@ -98,17 +136,19 @@
         <h2>体組成を記録</h2>
         <form id="form-body" class="inline-form">
           <label>日付<input type="date" id="body-date" required></label>
-          <label>体重(kg)<input type="number" step="0.1" id="body-weight" required></label>
-          <label>体脂肪率(%)<input type="number" step="0.1" id="body-fat" required></label>
+          <label>体重(kg)<input type="number" step="0.1" inputmode="decimal" id="body-weight" required></label>
+          <label>体脂肪率(%)<input type="number" step="0.1" inputmode="decimal" id="body-fat" required></label>
           <button type="submit" class="btn-primary">記録する</button>
         </form>
       </div>
       <div class="panel">
         <h2>記録履歴</h2>
+        <div class="table-scroll">
         <table class="data-table">
-          <thead><tr><th>日付</th><th>体重(kg)</th><th>体脂肪率(%)</th><th>除脂肪体重(kg)</th><th></th></tr></thead>
+          <thead><tr><th>日付</th><th>体重(kg)</th><th>体脂肪率(%)</th><th>LBM(kg)</th><th></th></tr></thead>
           <tbody id="body-log-table"></tbody>
         </table>
+        </div>
       </div>
     </section>
 
@@ -127,10 +167,10 @@
             </select>
           </label>
           <label>メニュー名<input type="text" id="meal-name" required placeholder="例: 鶏胸肉と白米"></label>
-          <label>カロリー(kcal)<input type="number" step="1" id="meal-cal" required></label>
-          <label>たんぱく質(g)<input type="number" step="0.1" id="meal-protein" required></label>
-          <label>炭水化物(g)<input type="number" step="0.1" id="meal-carb" value="0"></label>
-          <label>脂質(g)<input type="number" step="0.1" id="meal-fat" value="0"></label>
+          <label>カロリー(kcal)<input type="number" step="1" inputmode="numeric" id="meal-cal" required></label>
+          <label>たんぱく質(g)<input type="number" step="0.1" inputmode="decimal" id="meal-protein" required></label>
+          <label>炭水化物(g)<input type="number" step="0.1" inputmode="decimal" id="meal-carb" value="0"></label>
+          <label>脂質(g)<input type="number" step="0.1" inputmode="decimal" id="meal-fat" value="0"></label>
           <button type="submit" class="btn-primary">記録する</button>
         </form>
       </div>
@@ -138,10 +178,12 @@
         <h2>日付で表示</h2>
         <input type="date" id="meal-filter-date">
         <div class="totals-row" id="meal-day-totals"></div>
+        <div class="table-scroll">
         <table class="data-table">
-          <thead><tr><th>区分</th><th>メニュー</th><th>kcal</th><th>P</th><th>C</th><th>F</th><th></th></tr></thead>
+          <thead><tr><th>区分</th><th>メニュー</th><th>カロリー</th><th>たんぱく質</th><th>炭水化物</th><th>脂質</th><th></th></tr></thead>
           <tbody id="meal-log-table"></tbody>
         </table>
+        </div>
       </div>
     </section>
 
@@ -152,24 +194,28 @@
         <form id="form-workout" class="inline-form">
           <label>日付<input type="date" id="workout-date" required></label>
           <label>種目<input type="text" id="workout-exercise" required placeholder="例: ベンチプレス"></label>
-          <label>重量(kg)<input type="number" step="0.5" id="workout-weight" required></label>
-          <label>回数(reps)<input type="number" step="1" id="workout-reps" required></label>
-          <label>セット数<input type="number" step="1" id="workout-sets" required value="3"></label>
+          <label>重量(kg)<input type="number" step="0.5" inputmode="decimal" id="workout-weight" required></label>
+          <label>回数(reps)<input type="number" step="1" inputmode="numeric" id="workout-reps" required></label>
+          <label>セット数<input type="number" step="1" inputmode="numeric" id="workout-sets" required value="3"></label>
           <button type="submit" class="btn-primary">記録する</button>
         </form>
       </div>
       <div class="panel">
         <h2>日付で表示</h2>
         <input type="date" id="workout-filter-date">
+        <div class="table-scroll">
         <table class="data-table">
           <thead><tr><th>種目</th><th>重量</th><th>回数</th><th>セット</th><th>総ボリューム</th><th></th></tr></thead>
           <tbody id="workout-log-table"></tbody>
         </table>
+        </div>
+        <p class="field-hint">総ボリューム = 重量 × 回数 × セット数。トレーニング全体の負荷の大きさを表す数字で、増えていくほど筋トレが強くなっている目安になります。</p>
       </div>
       <div class="panel">
-        <h2>種目別ボリューム推移</h2>
+        <h2>種目別の強さの推移</h2>
+        <p class="field-hint" style="margin-top:-6px;margin-bottom:10px;">選んだ種目の「総ボリューム」が日を追ってどう変化しているかを表示します。</p>
         <select id="workout-exercise-select"></select>
-        <canvas id="chart-workout" height="90"></canvas>
+        <div class="chart-box"><canvas id="chart-workout"></canvas></div>
       </div>
     </section>
 
@@ -185,7 +231,7 @@
             </select>
           </label>
           <label>生年月日<input type="date" id="set-birthdate"></label>
-          <label>身長(cm)<input type="number" step="0.1" id="set-height" required></label>
+          <label>身長(cm)<input type="number" step="0.1" inputmode="decimal" id="set-height" required></label>
           <label>活動レベル
             <select id="set-activity">
               <option value="1.2">座り仕事中心</option>
@@ -195,7 +241,10 @@
               <option value="1.9">非常に活発 (肉体労働+運動)</option>
             </select>
           </label>
-          <label>カロリー赤字(kcal/日)<input type="number" step="50" id="set-deficit" value="400"></label>
+          <label>1日に減らすカロリー量(kcal)
+            <input type="number" step="50" id="set-deficit" value="400">
+            <span class="field-hint">消費カロリーより、この分だけ少なく食べる設定です。大きくするほど早く体脂肪が減りますが、筋肉も落ちやすくなります。400〜500がおすすめです。</span>
+          </label>
           <label>目標体脂肪率(%)<input type="number" step="0.1" id="set-goal-bf" value="8"></label>
           <label>目標日<input type="date" id="set-goal-date" value="2026-12-31"></label>
           <button type="submit" class="btn-primary">保存する</button>
@@ -203,6 +252,7 @@
       </div>
       <div class="panel">
         <h2>データ管理</h2>
+        <p class="card-sub" style="margin-bottom:12px;">データはこの端末のブラウザ内にのみ保存されます。他の端末と同期したい場合はエクスポートしたファイルを共有してください。</p>
         <div class="btn-row">
           <button id="btn-export" class="btn-secondary">JSONエクスポート</button>
           <button id="btn-import" class="btn-secondary">JSONインポート</button>

@@ -40,17 +40,43 @@ document.getElementById('form-settings').addEventListener('submit', (e) => {
   alert('設定を保存しました');
 });
 
-document.getElementById('btn-export').addEventListener('click', () => {
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+async function exportData() {
+  const filename = `bodyfat-app-backup-${todayStr()}.json`;
+  const json = JSON.stringify(data, null, 2);
+
+  // When embedded in the Claude artifact viewer, a plain <a download> link
+  // is inert there — use the downloads capability instead when present.
+  if (window.claude && typeof window.claude.use === 'function') {
+    try {
+      const downloads = await window.claude.use('downloads');
+      if (downloads) {
+        try {
+          await downloads.save({ filename, data: json });
+        } catch (err) {
+          if (!err || err.code !== 'declined') {
+            alert('保存に失敗しました: ' + (err && err.message ? err.message : err));
+          }
+        }
+        return;
+      }
+    } catch (e) {
+      // fall through to the standalone-hosting fallback below
+    }
+  }
+
+  // Standalone hosting (e.g. GitHub Pages, local file): plain browser download.
+  const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `bodyfat-app-backup-${todayStr()}.json`;
+  a.download = filename;
   document.body.appendChild(a);
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
-});
+}
+
+document.getElementById('btn-export').addEventListener('click', exportData);
 
 document.getElementById('btn-import').addEventListener('click', () => {
   document.getElementById('file-import').click();
@@ -120,9 +146,9 @@ function renderBodyTable() {
   tbody.innerHTML = logs.map(l => `
     <tr>
       <td>${l.date}</td>
-      <td>${l.weight.toFixed(1)}</td>
-      <td>${l.bodyFat.toFixed(1)}</td>
-      <td>${calcLBM(l.weight, l.bodyFat).toFixed(1)}</td>
+      <td class="num">${l.weight.toFixed(1)}</td>
+      <td class="num">${l.bodyFat.toFixed(1)}</td>
+      <td class="num">${calcLBM(l.weight, l.bodyFat).toFixed(1)}</td>
       <td><button class="del-btn" data-id="${l.id}" data-kind="body">削除</button></td>
     </tr>
   `).join('') || '<tr><td colspan="5">記録がありません</td></tr>';
@@ -160,10 +186,10 @@ function renderMealTable() {
     <tr>
       <td>${m.type}</td>
       <td>${m.name}</td>
-      <td>${m.cal}</td>
-      <td>${m.protein}</td>
-      <td>${m.carb}</td>
-      <td>${m.fat}</td>
+      <td class="num">${m.cal}</td>
+      <td class="num">${m.protein}</td>
+      <td class="num">${m.carb}</td>
+      <td class="num">${m.fat}</td>
       <td><button class="del-btn" data-id="${m.id}" data-kind="meal">削除</button></td>
     </tr>
   `).join('') || '<tr><td colspan="7">この日の記録はありません</td></tr>';
@@ -174,10 +200,10 @@ function renderMealTable() {
   }, { cal: 0, protein: 0, carb: 0, fat: 0 });
 
   document.getElementById('meal-day-totals').innerHTML = `
-    <span>カロリー: <b>${totals.cal}</b> kcal</span>
-    <span>P: <b>${totals.protein.toFixed(1)}</b>g</span>
-    <span>C: <b>${totals.carb.toFixed(1)}</b>g</span>
-    <span>F: <b>${totals.fat.toFixed(1)}</b>g</span>
+    <span>カロリー: <b class="num">${totals.cal}</b> kcal</span>
+    <span>たんぱく質: <b class="num">${totals.protein.toFixed(1)}</b>g</span>
+    <span>炭水化物: <b class="num">${totals.carb.toFixed(1)}</b>g</span>
+    <span>脂質: <b class="num">${totals.fat.toFixed(1)}</b>g</span>
   `;
 }
 
@@ -217,10 +243,10 @@ function renderWorkoutTable() {
   tbody.innerHTML = dayWorkouts.map(w => `
     <tr>
       <td>${w.exercise}</td>
-      <td>${w.weight}kg</td>
-      <td>${w.reps}</td>
-      <td>${w.sets}</td>
-      <td>${(w.weight * w.reps * w.sets).toFixed(1)}kg</td>
+      <td class="num">${w.weight}kg</td>
+      <td class="num">${w.reps}</td>
+      <td class="num">${w.sets}</td>
+      <td class="num">${(w.weight * w.reps * w.sets).toFixed(1)}kg</td>
       <td><button class="del-btn" data-id="${w.id}" data-kind="workout">削除</button></td>
     </tr>
   `).join('') || '<tr><td colspan="6">この日の記録はありません</td></tr>';
@@ -256,8 +282,8 @@ function renderWorkoutChart() {
       datasets: [{
         label: `${exercise || '種目'} 総ボリューム (kg)`,
         data: volumes,
-        borderColor: '#4fd1a5',
-        backgroundColor: 'rgba(79,209,165,0.15)',
+        borderColor: cssVar('--accent'),
+        backgroundColor: cssVar('--accent') + '26',
         tension: 0.3,
         fill: true,
       }],
@@ -281,12 +307,16 @@ document.addEventListener('click', (e) => {
 
 // ---------- Charts ----------
 function chartBaseOptions() {
+  const textDim = cssVar('--text-dim');
+  const line = cssVar('--line');
+  const text = cssVar('--text');
   return {
     responsive: true,
-    plugins: { legend: { labels: { color: '#e8ecf5' } } },
+    maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: text } } },
     scales: {
-      x: { ticks: { color: '#8f9bb8' }, grid: { color: '#2a3550' } },
-      y: { ticks: { color: '#8f9bb8' }, grid: { color: '#2a3550' } },
+      x: { ticks: { color: textDim }, grid: { color: line } },
+      y: { ticks: { color: textDim }, grid: { color: line } },
     },
   };
 }
@@ -304,16 +334,16 @@ function renderBodyChart() {
         {
           label: '体重 (kg)',
           data: logs.map(l => l.weight),
-          borderColor: '#4fd1a5',
-          backgroundColor: 'rgba(79,209,165,0.15)',
+          borderColor: cssVar('--accent'),
+          backgroundColor: cssVar('--accent') + '26',
           yAxisID: 'y',
           tension: 0.3,
         },
         {
           label: '体脂肪率 (%)',
           data: logs.map(l => l.bodyFat),
-          borderColor: '#ff9f6b',
-          backgroundColor: 'rgba(255,159,107,0.15)',
+          borderColor: cssVar('--accent-warm'),
+          backgroundColor: cssVar('--accent-warm') + '26',
           yAxisID: 'y1',
           tension: 0.3,
         },
@@ -322,9 +352,9 @@ function renderBodyChart() {
     options: {
       ...chartBaseOptions(),
       scales: {
-        x: { ticks: { color: '#8f9bb8' }, grid: { color: '#2a3550' } },
-        y: { position: 'left', ticks: { color: '#8f9bb8' }, grid: { color: '#2a3550' } },
-        y1: { position: 'right', ticks: { color: '#8f9bb8' }, grid: { display: false } },
+        x: { ticks: { color: cssVar('--text-dim') }, grid: { color: cssVar('--line') } },
+        y: { position: 'left', ticks: { color: cssVar('--text-dim') }, grid: { color: cssVar('--line') } },
+        y1: { position: 'right', ticks: { color: cssVar('--text-dim') }, grid: { display: false } },
       },
     },
   });
@@ -349,13 +379,13 @@ function renderCalorieChart(calorieTarget) {
         {
           label: '摂取カロリー',
           data: totals,
-          backgroundColor: '#4fd1a5',
+          backgroundColor: cssVar('--accent'),
         },
         {
           label: '目標カロリー',
           data: days.map(() => calorieTarget || 0),
           type: 'line',
-          borderColor: '#ff9f6b',
+          borderColor: cssVar('--accent-warm'),
           borderDash: [6, 4],
           pointRadius: 0,
         },
@@ -405,7 +435,9 @@ function renderDashboard() {
   const proteinTarget = calcProteinTarget(lbm);
 
   document.getElementById('dash-cal-target').textContent = calorieTarget ? `${calorieTarget}kcal` : '-';
-  document.getElementById('dash-cal-detail').textContent = tdee ? `TDEE: ${Math.round(tdee)}kcal` : 'プロフィールと体組成を入力してください';
+  document.getElementById('dash-cal-detail').textContent = tdee
+    ? `1日に消費するカロリー: ${Math.round(tdee)}kcal`
+    : '「設定」でプロフィールを、「体組成」で体重・体脂肪率を入力してください';
 
   document.getElementById('dash-protein-target').textContent = proteinTarget ? `${Math.round(proteinTarget)}g` : '-';
 
@@ -459,3 +491,10 @@ function setDefaultDates() {
 
 setDefaultDates();
 renderAll();
+
+if (window.matchMedia) {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    renderDashboard();
+    renderWorkoutChart();
+  });
+}
