@@ -536,10 +536,13 @@ function renderBodyChart() {
 function renderCalorieChart(calorieTarget) {
   if (typeof Chart === 'undefined') return;
   const days = [];
+  // Anchor at noon UTC (safely mid-day in JST too) before stepping back
+  // whole days, so each label lands on the correct JST calendar date.
+  const anchor = new Date(todayStr() + 'T12:00:00Z');
   for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    days.push(d.toISOString().slice(0, 10));
+    const d = new Date(anchor);
+    d.setUTCDate(d.getUTCDate() - i);
+    days.push(formatDateJST(d));
   }
   const totals = days.map(d => mealTotalsForDate(d).cal);
   const ctx = document.getElementById('chart-calories');
@@ -675,14 +678,38 @@ function renderAll() {
   renderDashboard();
 }
 
+const DATE_FIELD_IDS = ['body-date', 'meal-date', 'meal-filter-date', 'workout-date', 'workout-filter-date'];
+
 function setDefaultDates() {
   const t = todayStr();
-  document.getElementById('body-date').value = t;
-  document.getElementById('meal-date').value = t;
-  document.getElementById('meal-filter-date').value = t;
-  document.getElementById('workout-date').value = t;
-  document.getElementById('workout-filter-date').value = t;
+  DATE_FIELD_IDS.forEach(id => { document.getElementById(id).value = t; });
 }
+
+// If the page is left open across midnight (JST), the date fields would
+// otherwise keep showing the day the page was loaded on. Re-check "today"
+// whenever the tab regains focus and periodically while it stays open, and
+// roll forward any field still sitting on the old date (never a date the
+// user deliberately backdated).
+let currentAppDate = todayStr();
+
+function refreshDateIfChanged() {
+  const now = todayStr();
+  if (now === currentAppDate) return;
+  const previous = currentAppDate;
+  currentAppDate = now;
+  DATE_FIELD_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el.value === previous) el.value = now;
+  });
+  renderMealTable();
+  renderWorkoutTable();
+  renderDashboard();
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') refreshDateIfChanged();
+});
+setInterval(refreshDateIfChanged, 60000);
 
 setDefaultDates();
 initWorkoutRows(3);

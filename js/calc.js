@@ -44,8 +44,17 @@ function daysBetween(dateFromStr, dateToStr) {
   return Math.round(ms / (1000 * 60 * 60 * 24));
 }
 
+// Formats a Date as YYYY-MM-DD in Japan time, regardless of the device's
+// own timezone setting, so "today" always rolls over at JST midnight
+// (Date#toISOString() uses UTC, which rolls over 9 hours late for JST).
+const JST_DATE_FORMATTER = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Tokyo' });
+
+function formatDateJST(date) {
+  return JST_DATE_FORMATTER.format(date);
+}
+
 function todayStr() {
-  return new Date().toISOString().slice(0, 10);
+  return formatDateJST(new Date());
 }
 
 function cssVar(name) {
