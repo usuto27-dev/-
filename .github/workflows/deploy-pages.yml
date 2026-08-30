@@ -28,6 +28,10 @@ jobs:
         uses: actions/configure-pages@v5
         with:
           enablement: true
+      - name: Bust cache on local CSS/JS
+        run: |
+          v="${GITHUB_SHA::8}"
+          sed -i "s#\(css/style\.css\|js/storage\.js\|js/calc\.js\|js/app\.js\)\"#\1?v=${v}\"#g" index.html
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
