@@ -280,9 +280,9 @@ function renderMealTable() {
 
 function mealTotalsForDate(dateStr) {
   return data.meals.filter(m => m.date === dateStr).reduce((acc, m) => {
-    acc.cal += m.cal; acc.protein += m.protein;
+    acc.cal += m.cal; acc.protein += m.protein; acc.fat += m.fat;
     return acc;
-  }, { cal: 0, protein: 0 });
+  }, { cal: 0, protein: 0, fat: 0 });
 }
 
 // ---------- Workouts (multi-exercise quick entry) ----------
@@ -646,18 +646,24 @@ function renderDashboard() {
     ? `1日に消費するカロリー: ${Math.round(tdee)}kcal`
     : '「設定」でプロフィールを、「体組成」で体重・体脂肪率を入力してください';
 
-  document.getElementById('dash-protein-target').textContent = proteinTarget ? `${Math.round(proteinTarget)}g` : '-';
-
   // Today's intake
   const todayTotals = mealTotalsForDate(today);
   document.getElementById('dash-today-cal').textContent = `${todayTotals.cal}kcal`;
   document.getElementById('dash-today-cal-diff').textContent = calorieTarget
     ? `残り ${calorieTarget - todayTotals.cal}kcal`
     : '-';
+
   document.getElementById('dash-today-protein').textContent = `${todayTotals.protein.toFixed(1)}g`;
-  document.getElementById('dash-today-protein-diff').textContent = proteinTarget
-    ? `残り ${(proteinTarget - todayTotals.protein).toFixed(1)}g`
-    : '-';
+  if (proteinTarget) {
+    const remainingProtein = proteinTarget - todayTotals.protein;
+    document.getElementById('dash-protein-detail').textContent = remainingProtein > 0
+      ? `あと${remainingProtein.toFixed(1)}gで目標(${Math.round(proteinTarget)}g)達成`
+      : `目標(${Math.round(proteinTarget)}g)達成済み`;
+  } else {
+    document.getElementById('dash-protein-detail').textContent = '「体組成」で記録すると目標との差が表示されます';
+  }
+
+  document.getElementById('dash-today-fat').textContent = `${todayTotals.fat.toFixed(1)}g`;
 
   // Progress bar (start bodyFat -> goal bodyFat)
   const startBf = first ? first.bodyFat : (latest ? latest.bodyFat : null);
