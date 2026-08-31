@@ -37,6 +37,11 @@ function calcCalorieTarget(tdee, deficit) {
   return Math.max(1200, Math.round(tdee - deficit));
 }
 
+function calcFatTarget(calorieTarget) {
+  if (calorieTarget == null) return null;
+  return (calorieTarget * 0.25) / 9; // ~25% of calories from fat, at 9 kcal/g
+}
+
 function daysBetween(dateFromStr, dateToStr) {
   const from = new Date(dateFromStr);
   const to = new Date(dateToStr);

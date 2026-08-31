@@ -640,6 +640,7 @@ function renderDashboard() {
   const tdee = calcTDEE(bmr, s.activity);
   const calorieTarget = calcCalorieTarget(tdee, s.deficit);
   const proteinTarget = calcProteinTarget(lbm);
+  const fatTarget = calcFatTarget(calorieTarget);
 
   document.getElementById('dash-cal-target').textContent = calorieTarget ? `${calorieTarget}kcal` : '-';
   document.getElementById('dash-cal-detail').textContent = tdee
@@ -653,17 +654,29 @@ function renderDashboard() {
     ? `残り ${calorieTarget - todayTotals.cal}kcal`
     : '-';
 
-  document.getElementById('dash-today-protein').textContent = `${todayTotals.protein.toFixed(1)}g`;
   if (proteinTarget) {
     const remainingProtein = proteinTarget - todayTotals.protein;
-    document.getElementById('dash-protein-detail').textContent = remainingProtein > 0
-      ? `あと${remainingProtein.toFixed(1)}gで目標(${Math.round(proteinTarget)}g)達成`
-      : `目標(${Math.round(proteinTarget)}g)達成済み`;
+    document.getElementById('dash-today-protein').textContent = remainingProtein > 0
+      ? `あと${remainingProtein.toFixed(1)}g`
+      : '目標達成';
+    document.getElementById('dash-protein-detail').textContent =
+      `今日食べた量: ${todayTotals.protein.toFixed(1)}g(目標${Math.round(proteinTarget)}g)`;
   } else {
+    document.getElementById('dash-today-protein').textContent = `${todayTotals.protein.toFixed(1)}g`;
     document.getElementById('dash-protein-detail').textContent = '「体組成」で記録すると目標との差が表示されます';
   }
 
-  document.getElementById('dash-today-fat').textContent = `${todayTotals.fat.toFixed(1)}g`;
+  if (fatTarget) {
+    const remainingFat = fatTarget - todayTotals.fat;
+    document.getElementById('dash-today-fat').textContent = remainingFat > 0
+      ? `あと${remainingFat.toFixed(1)}g`
+      : '目標達成';
+    document.getElementById('dash-fat-detail').textContent =
+      `今日食べた量: ${todayTotals.fat.toFixed(1)}g(目標${Math.round(fatTarget)}g)`;
+  } else {
+    document.getElementById('dash-today-fat').textContent = `${todayTotals.fat.toFixed(1)}g`;
+    document.getElementById('dash-fat-detail').textContent = '「体組成」で記録すると目標との差が表示されます';
+  }
 
   // Progress bar (start bodyFat -> goal bodyFat)
   const startBf = first ? first.bodyFat : (latest ? latest.bodyFat : null);
