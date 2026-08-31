@@ -429,7 +429,7 @@ function renderWorkoutExerciseSelect() {
 document.getElementById('workout-exercise-select').addEventListener('change', renderWorkoutChart);
 
 function renderWorkoutChart() {
-  if (typeof Chart === 'undefined') return;
+  if (typeof Chart === 'undefined') { showChartUnavailable('chart-workout'); return; }
   const select = document.getElementById('workout-exercise-select');
   const exercise = select.value;
   const ctx = document.getElementById('chart-workout');
@@ -474,6 +474,17 @@ document.addEventListener('click', (e) => {
 });
 
 // ---------- Charts ----------
+function showChartUnavailable(canvasId) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const box = canvas.closest('.chart-box') || canvas.parentElement;
+  if (box.querySelector('.chart-fallback-msg')) return;
+  const msg = document.createElement('p');
+  msg.className = 'field-hint chart-fallback-msg';
+  msg.textContent = 'グラフを読み込めませんでした。通信環境をご確認のうえ、アプリを再読み込みしてみてください。';
+  box.appendChild(msg);
+}
+
 function chartBaseOptions() {
   const textDim = cssVar('--text-dim');
   const line = cssVar('--line');
@@ -490,7 +501,7 @@ function chartBaseOptions() {
 }
 
 function renderBodyChart() {
-  if (typeof Chart === 'undefined') return;
+  if (typeof Chart === 'undefined') { showChartUnavailable('chart-body'); return; }
   const logs = sortedBodyLogs();
   const ctx = document.getElementById('chart-body');
   if (chartBody) chartBody.destroy();
@@ -534,7 +545,7 @@ function renderBodyChart() {
 }
 
 function renderCalorieChart(calorieTarget) {
-  if (typeof Chart === 'undefined') return;
+  if (typeof Chart === 'undefined') { showChartUnavailable('chart-calories'); return; }
   const days = [];
   // Anchor at noon UTC (safely mid-day in JST too) before stepping back
   // whole days, so each label lands on the correct JST calendar date.
