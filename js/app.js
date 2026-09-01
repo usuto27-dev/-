@@ -640,11 +640,6 @@ function renderDashboard() {
   const proteinTarget = calcProteinTarget(lbm);
   const fatTarget = calcFatTarget(calorieTarget);
 
-  document.getElementById('dash-cal-target').textContent = calorieTarget ? `${calorieTarget}kcal` : '-';
-  document.getElementById('dash-cal-detail').textContent = tdee
-    ? `1日に消費するカロリー: ${Math.round(tdee)}kcal`
-    : '「設定」でプロフィールを、「体組成」で体重・体脂肪率を入力してください';
-
   // Today's intake
   const todayTotals = mealTotalsForDate(today);
   if (calorieTarget) {
