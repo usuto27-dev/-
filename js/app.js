@@ -207,8 +207,6 @@ document.getElementById('form-meal').addEventListener('submit', (e) => {
   saveData(data);
   e.target.reset();
   document.getElementById('meal-date').value = todayStr();
-  document.getElementById('meal-carb').value = 0;
-  document.getElementById('meal-fat').value = 0;
   document.getElementById('meal-paste-text').value = '';
   document.getElementById('meal-parse-status').textContent = '';
   document.getElementById('meal-ocr-status').textContent = '';
@@ -649,10 +647,17 @@ function renderDashboard() {
 
   // Today's intake
   const todayTotals = mealTotalsForDate(today);
-  document.getElementById('dash-today-cal').textContent = `${todayTotals.cal}kcal`;
-  document.getElementById('dash-today-cal-diff').textContent = calorieTarget
-    ? `残り ${calorieTarget - todayTotals.cal}kcal`
-    : '-';
+  if (calorieTarget) {
+    const remainingCal = calorieTarget - todayTotals.cal;
+    document.getElementById('dash-today-cal').textContent = remainingCal >= 0
+      ? `あと${remainingCal}kcal`
+      : `オーバー${Math.abs(remainingCal)}kcal`;
+    document.getElementById('dash-today-cal-diff').textContent =
+      `今日食べた量: ${todayTotals.cal}kcal(目標${calorieTarget}kcal)`;
+  } else {
+    document.getElementById('dash-today-cal').textContent = `${todayTotals.cal}kcal`;
+    document.getElementById('dash-today-cal-diff').textContent = '「設定」「体組成」を記録すると目標との差が表示されます';
+  }
 
   if (proteinTarget) {
     const remainingProtein = proteinTarget - todayTotals.protein;
