@@ -171,6 +171,15 @@
     <!-- Meals -->
     <section class="tab-panel" id="tab-meals">
       <div class="panel">
+        <h2>食べたものをチャットで送る</h2>
+        <p class="field-hint" style="margin-bottom:8px;">「鶏むね肉200g、ご飯1杯、卵2個」のように書いて送ると、内蔵の食品データベースから一番近いものを検索してカロリー・PFCを計算します。標準的な目安値のため、実際の商品や調理法とは誤差があります。</p>
+        <textarea id="food-chat-input" rows="2" placeholder="例: 鶏むね肉200g、ご飯1杯、卵2個"></textarea>
+        <div class="btn-row" style="margin-top:8px;">
+          <button type="button" id="btn-food-chat-search" class="btn-secondary">検索する</button>
+        </div>
+        <div id="food-chat-results"></div>
+      </div>
+      <div class="panel">
         <h2>他のAIで計算した結果を貼り付ける</h2>
         <p class="field-hint" style="margin-bottom:8px;">ChatGPTなど他のAIで食事の写真からカロリー・PFCを計算した場合、その結果をそのまま貼り付けると自動で数値を読み取って下のフォームに入力します。</p>
         <textarea id="meal-paste-text" rows="3" placeholder="例: カロリー550kcal, たんぱく質35g, 炭水化物60g, 脂質15g"></textarea>
@@ -309,6 +318,7 @@
 </div>
 <script src="js/storage.js"></script>
 <script src="js/calc.js"></script>
+<script src="js/fooddb.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

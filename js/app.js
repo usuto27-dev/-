@@ -214,6 +214,89 @@ document.getElementById('form-meal').addEventListener('submit', (e) => {
   renderDashboard();
 });
 
+// ---------- Food chat quick entry (database search) ----------
+let lastFoodChatResults = [];
+
+function guessMealType() {
+  const hour = new Date().getHours();
+  if (hour < 10) return '朝食';
+  if (hour < 15) return '昼食';
+  if (hour < 21) return '夕食';
+  return '間食';
+}
+
+function renderFoodChatResults(results) {
+  const container = document.getElementById('food-chat-results');
+  if (!results.length) {
+    container.innerHTML = '';
+    return;
+  }
+  const matchedCount = results.filter(r => r.matched).length;
+  container.innerHTML = `
+    <div class="inline-form" style="margin:10px 0;">
+      <label>日付<input type="date" id="food-chat-date" value="${todayStr()}"></label>
+      <label>食事区分
+        <select id="food-chat-type">
+          <option value="朝食">朝食</option>
+          <option value="昼食">昼食</option>
+          <option value="夕食">夕食</option>
+          <option value="間食">間食</option>
+        </select>
+      </label>
+    </div>
+    ${results.map((r, i) => r.matched ? `
+      <label class="food-chat-item">
+        <input type="checkbox" class="food-chat-check" data-index="${i}" checked>
+        <span class="food-chat-item-name">${r.matched.name} <span class="field-hint">(${r.grams}g相当)</span></span>
+        <span class="food-chat-item-macros num">${r.cal}kcal・P${r.protein}g・C${r.carb}g・F${r.fat}g</span>
+      </label>
+    ` : `
+      <div class="food-chat-item unmatched">「${r.query}」に一致する食品が見つかりませんでした(手動入力をご利用ください)</div>
+    `).join('')}
+    ${matchedCount ? '<div class="btn-row" style="margin-top:10px;"><button type="button" id="btn-food-chat-save" class="btn-primary">チェックした項目をまとめて記録する</button></div>' : ''}
+  `;
+  document.getElementById('food-chat-type').value = guessMealType();
+
+  const saveBtn = document.getElementById('btn-food-chat-save');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', () => {
+      const date = document.getElementById('food-chat-date').value || todayStr();
+      const type = document.getElementById('food-chat-type').value;
+      const checks = [...document.querySelectorAll('.food-chat-check:checked')];
+      let count = 0;
+      checks.forEach(chk => {
+        const r = lastFoodChatResults[Number(chk.dataset.index)];
+        if (!r || !r.matched) return;
+        data.meals.push({
+          id: uid(),
+          date, type,
+          name: r.matched.name,
+          cal: r.cal, protein: r.protein, carb: r.carb, fat: r.fat,
+        });
+        count++;
+      });
+      if (count === 0) {
+        alert('記録する項目を選んでください');
+        return;
+      }
+      saveData(data);
+      document.getElementById('food-chat-input').value = '';
+      document.getElementById('food-chat-results').innerHTML = '';
+      lastFoodChatResults = [];
+      renderMealTable();
+      renderDashboard();
+      alert(`${count}件を記録しました`);
+    });
+  }
+}
+
+document.getElementById('btn-food-chat-search').addEventListener('click', () => {
+  const text = document.getElementById('food-chat-input').value;
+  if (!text.trim()) return;
+  lastFoodChatResults = parseFoodChatText(text);
+  renderFoodChatResults(lastFoodChatResults);
+});
+
 function applyParsedNutrition(parsed, statusEl) {
   const found = [];
   if (parsed.cal != null) { document.getElementById('meal-cal').value = parsed.cal; found.push(`カロリー${parsed.cal}kcal`); }
