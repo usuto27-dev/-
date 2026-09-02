@@ -94,6 +94,36 @@ const FOOD_DB = [
   { name: 'ラーメン', aliases: [], kcal: 500, protein: 20, carb: 65, fat: 18, servingGrams: 100 },
   { name: '牛丼(並盛)', aliases: ['牛丼'], kcal: 733, protein: 20, carb: 110, fat: 22, servingGrams: 100 },
   { name: 'チャーハン', aliases: ['炒飯'], kcal: 650, protein: 15, carb: 95, fat: 20, servingGrams: 100 },
+  { name: '麻婆豆腐', aliases: ['マーボー豆腐'], kcal: 300, protein: 15, carb: 12, fat: 20, servingGrams: 100 },
+  { name: '天津飯', aliases: [], kcal: 620, protein: 16, carb: 95, fat: 18, servingGrams: 100 },
+  { name: '焼きそば', aliases: [], kcal: 550, protein: 14, carb: 75, fat: 20, servingGrams: 100 },
+  { name: 'ナポリタン', aliases: [], kcal: 650, protein: 18, carb: 90, fat: 22, servingGrams: 100 },
+  { name: 'オムライス', aliases: [], kcal: 700, protein: 20, carb: 85, fat: 28, servingGrams: 100 },
+
+  // 居酒屋メニュー(1皿・1個の値、servingGramsは常に100の内部仕様)
+  { name: '餃子(1個)', aliases: ['餃子', 'ぎょうざ'], kcal: 50, protein: 2.0, carb: 4.5, fat: 2.8, servingGrams: 100 },
+  { name: 'ニラレバ炒め', aliases: ['ニラレバ', 'レバニラ', 'レバニラ炒め'], kcal: 350, protein: 20, carb: 15, fat: 22, servingGrams: 100 },
+  { name: 'カニ玉', aliases: ['かに玉', 'カニたま'], kcal: 380, protein: 15, carb: 10, fat: 30, servingGrams: 100 },
+  { name: '焼き鳥(たれ・1本)', aliases: ['焼き鳥', 'やきとり'], kcal: 90, protein: 8, carb: 4, fat: 4.5, servingGrams: 100 },
+  { name: '枝豆', aliases: [], kcal: 60, protein: 5.5, carb: 4.0, fat: 2.5, servingGrams: 80 },
+  { name: '冷奴', aliases: [], kcal: 80, protein: 6.5, carb: 2.0, fat: 5.0, servingGrams: 150 },
+  { name: 'ポテトサラダ', aliases: [], kcal: 150, protein: 2.5, carb: 15, fat: 9, servingGrams: 100 },
+  { name: 'フライドポテト', aliases: ['ポテトフライ', 'ポテト'], kcal: 280, protein: 3.5, carb: 35, fat: 14, servingGrams: 100 },
+  { name: 'お好み焼き', aliases: [], kcal: 550, protein: 18, carb: 55, fat: 28, servingGrams: 100 },
+  { name: 'たこ焼き(1人前)', aliases: ['たこ焼き'], kcal: 400, protein: 12, carb: 45, fat: 18, servingGrams: 100 },
+  { name: '刺身盛り合わせ', aliases: ['刺身'], kcal: 150, protein: 25, carb: 3, fat: 4, servingGrams: 100 },
+  { name: '天ぷら盛り合わせ', aliases: ['天ぷら'], kcal: 450, protein: 15, carb: 35, fat: 28, servingGrams: 100 },
+
+  // お酒(1杯・1本の値、servingGramsは常に100の内部仕様)
+  { name: '瓶ビール(中瓶)', aliases: ['瓶ビール', 'ビール'], kcal: 197, protein: 1.5, carb: 15.5, fat: 0, servingGrams: 100 },
+  { name: '生ビール(中ジョッキ)', aliases: ['生ビール', 'ジョッキ'], kcal: 200, protein: 1.6, carb: 15.7, fat: 0, servingGrams: 100 },
+  { name: 'ウーロンハイ', aliases: ['ウーロン割り'], kcal: 90, protein: 0, carb: 0.5, fat: 0, servingGrams: 100 },
+  { name: 'レモンサワー', aliases: ['サワー'], kcal: 100, protein: 0, carb: 3, fat: 0, servingGrams: 100 },
+  { name: 'ハイボール', aliases: [], kcal: 90, protein: 0, carb: 0, fat: 0, servingGrams: 100 },
+  { name: '日本酒(1合)', aliases: ['日本酒', '熱燗', '冷酒'], kcal: 196, protein: 0.4, carb: 8.8, fat: 0, servingGrams: 100 },
+  { name: '焼酎ロック', aliases: ['焼酎'], kcal: 146, protein: 0, carb: 0, fat: 0, servingGrams: 100 },
+  { name: 'ワイン(グラス1杯)', aliases: ['赤ワイン', '白ワイン', 'ワイン'], kcal: 88, protein: 0.1, carb: 1.5, fat: 0, servingGrams: 100 },
+  { name: '梅酒', aliases: ['梅酒ロック', '梅酒ソーダ'], kcal: 155, protein: 0.1, carb: 20, fat: 0, servingGrams: 100 },
 ];
 
 function searchFoodDatabase(query, limit = 5) {
@@ -122,14 +152,35 @@ function splitFoodSegments(text) {
     .filter(Boolean);
 }
 
-// Pulls a trailing quantity (grams, or a count like "2個") off a segment,
-// returning the remaining food name plus either `grams` or `count`.
-function extractFoodQuantity(segment) {
-  let m = segment.match(/^(.*?)\s*([0-9]+(?:\.[0-9]+)?)\s*(?:g|グラム)\s*$/);
-  if (m) return { name: m[1].trim(), grams: parseFloat(m[2]) };
+// Pulls a trailing fraction word/expression ("半分", "半", "3分の1", "1/2")
+// off a segment, returning the remaining text plus a multiplier (1 if none
+// found).
+function extractFractionMultiplier(segment) {
+  let m = segment.match(/^(.*?)(半分|半)$/);
+  if (m && m[1].trim()) return { rest: m[1].trim(), multiplier: 0.5 };
 
-  m = segment.match(/^(.*?)\s*([0-9]+(?:\.[0-9]+)?)\s*(?:個|枚|杯|本|切れ|パック|皿|缶|丁|尾)?\s*$/);
-  if (m && m[1].trim()) return { name: m[1].trim(), count: parseFloat(m[2]) };
+  m = segment.match(/^(.*?)([0-9]+)分の([0-9]+)$/);
+  if (m && m[1].trim()) return { rest: m[1].trim(), multiplier: parseFloat(m[3]) / parseFloat(m[2]) };
+
+  m = segment.match(/^(.*?)([0-9]+)\/([0-9]+)$/);
+  if (m && m[1].trim()) return { rest: m[1].trim(), multiplier: parseFloat(m[2]) / parseFloat(m[3]) };
+
+  return { rest: segment, multiplier: 1 };
+}
+
+// Pulls a trailing quantity (grams, or a count like "2個") off a segment,
+// returning the remaining food name plus either `grams` or `count`. Any
+// fraction word ("半分" etc.) is applied as a multiplier on top of that.
+function extractFoodQuantity(segment) {
+  const { rest, multiplier } = extractFractionMultiplier(segment);
+
+  let m = rest.match(/^(.*?)\s*([0-9]+(?:\.[0-9]+)?)\s*(?:g|グラム)\s*$/);
+  if (m) return { name: m[1].trim(), grams: parseFloat(m[2]) * multiplier };
+
+  m = rest.match(/^(.*?)\s*([0-9]+(?:\.[0-9]+)?)\s*(?:個|枚|杯|本|切れ|パック|皿|缶|丁|尾|人前|つ)?\s*$/);
+  if (m && m[1].trim()) return { name: m[1].trim(), count: parseFloat(m[2]) * multiplier };
+
+  if (rest.trim()) return { name: rest.trim(), count: multiplier };
 
   return { name: segment.trim(), count: 1 };
 }
