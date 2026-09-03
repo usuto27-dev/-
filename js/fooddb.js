@@ -89,6 +89,9 @@ const FOOD_DB = [
   { name: '味噌汁', aliases: [], kcal: 40, protein: 2.5, carb: 4.0, fat: 1.5, servingGrams: 180 },
   { name: 'プロテイン(ホエイ)', aliases: ['プロテイン'], kcal: 400, protein: 80, carb: 8, fat: 5, servingGrams: 30 },
 
+  // 「いつもの」定番メニュー(1回分の値を直接格納)
+  { name: 'プロテイン(いつもの)', aliases: ['いつもの', 'いつものプロテイン'], kcal: 209, protein: 24.5, carb: 21.5, fat: 3.3, servingGrams: 100 },
+
   // 和菓子
   { name: '草餅', aliases: ['くさ餅', 'よもぎ餅'], kcal: 224, protein: 4.5, carb: 49.3, fat: 0.6, servingGrams: 50 },
   { name: '大福', aliases: ['大福もち', 'あんこ大福'], kcal: 235, protein: 4.9, carb: 50.5, fat: 0.6, servingGrams: 60 },
