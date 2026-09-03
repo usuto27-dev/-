@@ -290,9 +290,74 @@ function renderFoodChatResults(results) {
   }
 }
 
+// If the message already contains a computed "kcal" figure (e.g. pasted
+// from another AI's photo analysis, or typed by hand), treat the whole
+// thing as one ready-made entry instead of searching the food database.
+function guessDirectEntryName(text) {
+  const m = text.match(/^([^\d]+)/);
+  if (!m) return '';
+  return m[1].replace(/[:：\-—―・、,，]+$/, '').trim();
+}
+
+function renderFoodChatDirectEntry(parsed, rawText) {
+  const container = document.getElementById('food-chat-results');
+  container.innerHTML = `
+    <p class="field-hint" style="margin:10px 0 6px;">計算済みの数値を検出しました。メニュー名を入力して記録してください。</p>
+    <div class="inline-form" style="margin-bottom:10px;">
+      <label>メニュー名<input type="text" id="food-chat-direct-name" value="${guessDirectEntryName(rawText)}" placeholder="例: サラダチキン"></label>
+      <label>日付<input type="date" id="food-chat-date" value="${todayStr()}"></label>
+      <label>食事区分
+        <select id="food-chat-type">
+          <option value="朝食">朝食</option>
+          <option value="昼食">昼食</option>
+          <option value="夕食">夕食</option>
+          <option value="間食">間食</option>
+        </select>
+      </label>
+    </div>
+    <div class="totals-row" style="margin-bottom:10px;">
+      <span>カロリー: <b class="num">${parsed.cal ?? 0}</b>kcal</span>
+      <span>たんぱく質: <b class="num">${parsed.protein ?? 0}</b>g</span>
+      <span>炭水化物: <b class="num">${parsed.carb ?? 0}</b>g</span>
+      <span>脂質: <b class="num">${parsed.fat ?? 0}</b>g</span>
+    </div>
+    <div class="btn-row">
+      <button type="button" id="btn-food-chat-save-direct" class="btn-primary">記録する</button>
+    </div>
+  `;
+  document.getElementById('food-chat-type').value = guessMealType();
+
+  document.getElementById('btn-food-chat-save-direct').addEventListener('click', () => {
+    const name = document.getElementById('food-chat-direct-name').value.trim() || '記録';
+    const date = document.getElementById('food-chat-date').value || todayStr();
+    const type = document.getElementById('food-chat-type').value;
+    data.meals.push({
+      id: uid(),
+      date, type, name,
+      cal: parsed.cal || 0,
+      protein: parsed.protein || 0,
+      carb: parsed.carb || 0,
+      fat: parsed.fat || 0,
+    });
+    saveData(data);
+    document.getElementById('food-chat-input').value = '';
+    document.getElementById('food-chat-results').innerHTML = '';
+    renderMealTable();
+    renderDashboard();
+    alert('記録しました');
+  });
+}
+
 document.getElementById('btn-food-chat-search').addEventListener('click', () => {
   const text = document.getElementById('food-chat-input').value;
   if (!text.trim()) return;
+
+  const nutrition = parseNutritionText(text);
+  if (nutrition.cal != null) {
+    renderFoodChatDirectEntry(nutrition, text.trim());
+    return;
+  }
+
   lastFoodChatResults = parseFoodChatText(text);
   renderFoodChatResults(lastFoodChatResults);
 });
