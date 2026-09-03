@@ -22,11 +22,17 @@ function fillSettingsForm() {
   document.getElementById('set-deficit').value = s.deficit;
   document.getElementById('set-goal-bf').value = s.goalBodyFat;
   document.getElementById('set-goal-date').value = s.goalDate;
+
+  document.getElementById('set-cal-override').value = s.calorieTargetOverride ?? '';
+  document.getElementById('set-protein-override').value = s.proteinTargetOverride ?? '';
+  document.getElementById('set-fat-override').value = s.fatTargetOverride ?? '';
+  document.getElementById('set-carb-override').value = s.carbTargetOverride ?? '';
 }
 
 document.getElementById('form-settings').addEventListener('submit', (e) => {
   e.preventDefault();
   data.settings = {
+    ...data.settings,
     gender: document.getElementById('set-gender').value,
     birthdate: document.getElementById('set-birthdate').value,
     height: parseFloat(document.getElementById('set-height').value),
@@ -34,6 +40,25 @@ document.getElementById('form-settings').addEventListener('submit', (e) => {
     deficit: parseFloat(document.getElementById('set-deficit').value),
     goalBodyFat: parseFloat(document.getElementById('set-goal-bf').value),
     goalDate: document.getElementById('set-goal-date').value,
+  };
+  saveData(data);
+  renderDashboard();
+  alert('設定を保存しました');
+});
+
+function overrideValue(id) {
+  const v = document.getElementById(id).value;
+  return v === '' ? null : parseFloat(v);
+}
+
+document.getElementById('form-manual-targets').addEventListener('submit', (e) => {
+  e.preventDefault();
+  data.settings = {
+    ...data.settings,
+    calorieTargetOverride: overrideValue('set-cal-override'),
+    proteinTargetOverride: overrideValue('set-protein-override'),
+    fatTargetOverride: overrideValue('set-fat-override'),
+    carbTargetOverride: overrideValue('set-carb-override'),
   };
   saveData(data);
   renderDashboard();
@@ -426,9 +451,9 @@ function renderMealTable() {
 
 function mealTotalsForDate(dateStr) {
   return data.meals.filter(m => m.date === dateStr).reduce((acc, m) => {
-    acc.cal += m.cal; acc.protein += m.protein; acc.fat += m.fat;
+    acc.cal += m.cal; acc.protein += m.protein; acc.fat += m.fat; acc.carb += m.carb;
     return acc;
-  }, { cal: 0, protein: 0, fat: 0 });
+  }, { cal: 0, protein: 0, fat: 0, carb: 0 });
 }
 
 // ---------- Workouts (multi-exercise quick entry) ----------
@@ -784,9 +809,10 @@ function renderDashboard() {
   const age = ageFromBirthdate(s.birthdate);
   const bmr = latest ? calcBMR({ gender: s.gender, weight: latest.weight, height: s.height, age }) : null;
   const tdee = calcTDEE(bmr, s.activity);
-  const calorieTarget = calcCalorieTarget(tdee, s.deficit);
-  const proteinTarget = calcProteinTarget(lbm);
-  const fatTarget = calcFatTarget(calorieTarget);
+  const calorieTarget = s.calorieTargetOverride ?? calcCalorieTarget(tdee, s.deficit);
+  const proteinTarget = s.proteinTargetOverride ?? calcProteinTarget(lbm);
+  const fatTarget = s.fatTargetOverride ?? calcFatTarget(calorieTarget);
+  const carbTarget = s.carbTargetOverride ?? null;
 
   // Today's intake
   const todayTotals = mealTotalsForDate(today);
@@ -824,6 +850,18 @@ function renderDashboard() {
   } else {
     document.getElementById('dash-today-fat').textContent = `${todayTotals.fat.toFixed(1)}g`;
     document.getElementById('dash-fat-detail').textContent = '「体組成」で記録すると目標との差が表示されます';
+  }
+
+  if (carbTarget) {
+    const remainingCarb = carbTarget - todayTotals.carb;
+    document.getElementById('dash-today-carb').textContent = remainingCarb > 0
+      ? `あと${remainingCarb.toFixed(1)}g`
+      : '目標達成';
+    document.getElementById('dash-carb-detail').textContent =
+      `今日食べた量: ${todayTotals.carb.toFixed(1)}g(目標${Math.round(carbTarget)}g)`;
+  } else {
+    document.getElementById('dash-today-carb').textContent = `${todayTotals.carb.toFixed(1)}g`;
+    document.getElementById('dash-carb-detail').textContent = '「設定」で目標炭水化物を入力すると表示されます';
   }
 
   // Progress bar (start bodyFat -> goal bodyFat)

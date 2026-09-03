@@ -98,6 +98,11 @@
           <div class="card-value num" id="dash-today-fat">-</div>
           <div class="card-sub" id="dash-fat-detail">-</div>
         </div>
+        <div class="card">
+          <div class="card-label">今日の炭水化物</div>
+          <div class="card-value num" id="dash-today-carb">-</div>
+          <div class="card-sub" id="dash-carb-detail">-</div>
+        </div>
       </div>
 
       <details class="glossary">
@@ -299,6 +304,17 @@
           </label>
           <label>目標体脂肪率(%)<input type="number" step="0.1" id="set-goal-bf" value="8"></label>
           <label>目標日<input type="date" id="set-goal-date" value="2026-12-31"></label>
+          <button type="submit" class="btn-primary">保存する</button>
+        </form>
+      </div>
+      <div class="panel">
+        <h2>1日の目標を手動で指定</h2>
+        <p class="field-hint" style="margin-bottom:8px;">空欄の場合は体組成・プロフィールから自動計算した値を使います。数値を入れると、その値が自動計算より優先されます。</p>
+        <form id="form-manual-targets" class="inline-form">
+          <label>目標カロリー(kcal)<input type="number" step="10" id="set-cal-override" placeholder="自動計算"></label>
+          <label>目標たんぱく質(g)<input type="number" step="1" id="set-protein-override" placeholder="自動計算"></label>
+          <label>目標脂質(g)<input type="number" step="1" id="set-fat-override" placeholder="自動計算"></label>
+          <label>目標炭水化物(g)<input type="number" step="1" id="set-carb-override" placeholder="未設定"></label>
           <button type="submit" class="btn-primary">保存する</button>
         </form>
       </div>

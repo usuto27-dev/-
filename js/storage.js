@@ -10,6 +10,12 @@ const DEFAULT_DATA = {
     deficit: 400,
     goalBodyFat: 8,
     goalDate: '2026-12-31',
+    // Manual overrides for daily targets; null means "use the automatic
+    // calculation instead" (TDEE-based calorie, LBM-based protein, etc.).
+    calorieTargetOverride: null,
+    proteinTargetOverride: null,
+    fatTargetOverride: null,
+    carbTargetOverride: null,
   },
   bodyLogs: [],   // { id, date, weight, bodyFat, muscleMass }
   meals: [],      // { id, date, type, name, cal, protein, carb, fat }
