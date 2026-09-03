@@ -89,6 +89,15 @@ const FOOD_DB = [
   { name: '味噌汁', aliases: [], kcal: 40, protein: 2.5, carb: 4.0, fat: 1.5, servingGrams: 180 },
   { name: 'プロテイン(ホエイ)', aliases: ['プロテイン'], kcal: 400, protein: 80, carb: 8, fat: 5, servingGrams: 30 },
 
+  // 和菓子
+  { name: '草餅', aliases: ['くさ餅', 'よもぎ餅'], kcal: 224, protein: 4.5, carb: 49.3, fat: 0.6, servingGrams: 50 },
+  { name: '大福', aliases: ['大福もち', 'あんこ大福'], kcal: 235, protein: 4.9, carb: 50.5, fat: 0.6, servingGrams: 60 },
+  { name: 'みたらし団子', aliases: ['団子'], kcal: 200, protein: 3.0, carb: 44.0, fat: 0.4, servingGrams: 70 },
+  { name: 'どら焼き', aliases: [], kcal: 292, protein: 6.0, carb: 58.0, fat: 3.2, servingGrams: 70 },
+  { name: '練り羊羹', aliases: ['ようかん', '羊羹'], kcal: 296, protein: 3.6, carb: 69.9, fat: 0.2, servingGrams: 50 },
+  { name: 'まんじゅう', aliases: ['饅頭'], kcal: 283, protein: 4.9, carb: 62.7, fat: 1.4, servingGrams: 50 },
+  { name: 'おはぎ', aliases: [], kcal: 218, protein: 4.3, carb: 44.6, fat: 1.6, servingGrams: 70 },
+
   // 一皿料理(1食分の値を直接格納し、servingGramsは常に100の内部仕様)
   { name: 'カレーライス', aliases: ['カレー'], kcal: 760, protein: 15, carb: 110, fat: 25, servingGrams: 100 },
   { name: 'ラーメン', aliases: [], kcal: 500, protein: 20, carb: 65, fat: 18, servingGrams: 100 },
