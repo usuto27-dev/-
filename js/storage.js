@@ -16,6 +16,10 @@ const DEFAULT_DATA = {
     proteinTargetOverride: null,
     fatTargetOverride: null,
     carbTargetOverride: null,
+    // Cheat-day pacing: how many days between cheat days, and the date of
+    // the most recent one (null until the user records or sets one).
+    cheatDayIntervalDays: 14,
+    lastCheatDayDate: null,
   },
   bodyLogs: [],   // { id, date, weight, bodyFat, muscleMass }
   meals: [],      // { id, date, type, name, cal, protein, carb, fat }

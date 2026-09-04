@@ -134,6 +134,16 @@
       </div>
 
       <div class="panel">
+        <h2>チートデイ</h2>
+        <p class="field-hint" style="margin-bottom:8px;">チートデイ自体が体脂肪を早く落とすわけではありませんが、長期のダイエットを続けやすくする息抜きとして、一定間隔で取り入れる人が多いです。</p>
+        <div class="card-value num" id="dash-cheatday-value">-</div>
+        <p class="card-sub" id="dash-cheatday-detail" style="margin-top:4px;">-</p>
+        <div class="btn-row" style="margin-top:10px;">
+          <button type="button" id="btn-cheatday-today" class="btn-secondary">今日をチートデイにする</button>
+        </div>
+      </div>
+
+      <div class="panel">
         <h2>体重・体脂肪率の推移</h2>
         <div class="chart-box"><canvas id="chart-body"></canvas></div>
       </div>
@@ -315,6 +325,15 @@
           <label>目標たんぱく質(g)<input type="number" step="1" id="set-protein-override" placeholder="自動計算"></label>
           <label>目標脂質(g)<input type="number" step="1" id="set-fat-override" placeholder="自動計算"></label>
           <label>目標炭水化物(g)<input type="number" step="1" id="set-carb-override" placeholder="未設定"></label>
+          <button type="submit" class="btn-primary">保存する</button>
+        </form>
+      </div>
+      <div class="panel">
+        <h2>チートデイの間隔</h2>
+        <p class="field-hint" style="margin-bottom:8px;">何日に1回のペースでチートデイを取り入れるか、前回いつ取ったかを設定します。ホーム画面に次のタイミングの目安を表示します。</p>
+        <form id="form-cheatday" class="inline-form">
+          <label>間隔(日)<input type="number" step="1" min="1" id="set-cheatday-interval" placeholder="14"></label>
+          <label>前回のチートデイ<input type="date" id="set-cheatday-last"></label>
           <button type="submit" class="btn-primary">保存する</button>
         </form>
       </div>

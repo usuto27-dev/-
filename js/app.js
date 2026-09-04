@@ -27,6 +27,9 @@ function fillSettingsForm() {
   document.getElementById('set-protein-override').value = s.proteinTargetOverride ?? '';
   document.getElementById('set-fat-override').value = s.fatTargetOverride ?? '';
   document.getElementById('set-carb-override').value = s.carbTargetOverride ?? '';
+
+  document.getElementById('set-cheatday-interval').value = s.cheatDayIntervalDays ?? 14;
+  document.getElementById('set-cheatday-last').value = s.lastCheatDayDate ?? '';
 }
 
 document.getElementById('form-settings').addEventListener('submit', (e) => {
@@ -63,6 +66,28 @@ document.getElementById('form-manual-targets').addEventListener('submit', (e) =>
   saveData(data);
   renderDashboard();
   alert('設定を保存しました');
+});
+
+document.getElementById('form-cheatday').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const interval = parseFloat(document.getElementById('set-cheatday-interval').value) || 14;
+  const lastDate = document.getElementById('set-cheatday-last').value || null;
+  data.settings = {
+    ...data.settings,
+    cheatDayIntervalDays: interval,
+    lastCheatDayDate: lastDate,
+  };
+  saveData(data);
+  renderDashboard();
+  alert('設定を保存しました');
+});
+
+document.getElementById('btn-cheatday-today').addEventListener('click', () => {
+  data.settings = { ...data.settings, lastCheatDayDate: todayStr() };
+  saveData(data);
+  renderDashboard();
+  fillSettingsForm();
+  alert('今日をチートデイとして記録しました');
 });
 
 async function exportData() {
@@ -862,6 +887,21 @@ function renderDashboard() {
   } else {
     document.getElementById('dash-today-carb').textContent = `${todayTotals.carb.toFixed(1)}g`;
     document.getElementById('dash-carb-detail').textContent = '「設定」で目標炭水化物を入力すると表示されます';
+  }
+
+  // Cheat day pacing
+  const cheatInterval = s.cheatDayIntervalDays || 14;
+  if (s.lastCheatDayDate) {
+    const daysSinceCheat = daysBetween(s.lastCheatDayDate, today);
+    const daysUntilCheat = cheatInterval - daysSinceCheat;
+    document.getElementById('dash-cheatday-value').textContent =
+      daysUntilCheat <= 0 ? 'そろそろチートデイ' : `あと${daysUntilCheat}日`;
+    document.getElementById('dash-cheatday-detail').textContent =
+      `前回のチートデイ: ${s.lastCheatDayDate}(${cheatInterval}日に1回が目安)`;
+  } else {
+    document.getElementById('dash-cheatday-value').textContent = '未設定';
+    document.getElementById('dash-cheatday-detail').textContent =
+      `「設定」で前回のチートデイを入力するか、下のボタンで今日を記録してください(目安は${cheatInterval}日に1回)`;
   }
 
   // Progress bar (start bodyFat -> goal bodyFat)
