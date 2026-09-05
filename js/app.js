@@ -268,11 +268,11 @@ document.getElementById('form-meal').addEventListener('submit', (e) => {
 let lastFoodChatResults = [];
 
 function guessMealType() {
-  const hour = new Date().getHours();
-  if (hour < 10) return '朝食';
-  if (hour < 15) return '昼食';
-  if (hour < 21) return '夕食';
-  return '間食';
+  const hour = currentHourJST();
+  if (hour >= 6 && hour < 11) return '朝食';
+  if (hour >= 11 && hour < 14) return '昼食';
+  if (hour >= 14 && hour < 17) return '間食';
+  return '夕食'; // 17:00-24:00 and 0:00-6:00 (late night)
 }
 
 function renderFoodChatResults(results) {

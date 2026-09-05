@@ -71,6 +71,19 @@ function todayStr() {
   return formatDateJST(new Date());
 }
 
+// Built from explicit numeric parts for the same reason as formatDateJST:
+// avoids depending on the device's own timezone setting.
+const JST_HOUR_FORMATTER = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'Asia/Tokyo',
+  hour: '2-digit',
+  hour12: false,
+});
+
+function currentHourJST() {
+  const hourPart = JST_HOUR_FORMATTER.formatToParts(new Date()).find(p => p.type === 'hour').value;
+  return parseInt(hourPart, 10) % 24; // some environments report midnight as "24"
+}
+
 function cssVar(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
